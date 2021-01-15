@@ -1,0 +1,56 @@
+---
+galaxy_info:
+  role_name: avideo
+  author: Ted Cook
+  description: An Ansible role to install and configure avideo
+  license: MIT
+  min_ansible_version: 2.2
+  platforms:
+    - name: EL
+      versions:
+        - 7
+    - name: Archlinux
+      versions:
+        - all
+    - name: Ubuntu
+      versions:
+        - xenial
+    - name: Debian
+      versions:
+        - stretch
+  galaxy_tags: ['avideo']
+
+dependencies:
+  - role: nephelaiio.plugins
+  - role: nephelaiio.git
+  - role: nephelaiio.pip
+    vars:
+      pip_pip_names: "{{ avideo_pips }}"
+  - role: geerlingguy.apache
+    vars:
+      apache_remove_default_vhost: true
+      apache_vhosts_filename: "{{ avideo_servername }}.conf"
+      apache_vhosts_template: vhost.conf.j2
+      apache_listen_ip: "{{ avideo_listen_ip }}"
+      apache_listen_port: "{{ avideo_listen_port }}"
+  - role: geerlingguy.php
+    vars:
+      php_webserver_daemon: "{{ apache_daemon }}"
+      php_packages_extra: "{{ avideo_php_packages }}"
+      php_post_max_size: "{{ avideo_post_max_size }}"
+      php_upload_max_filesize: "{{ avideo_post_max_size }}"
+  - role: geerlingguy.mysql
+    vars:
+      mysql_root_user: "{{ avideo_mysql_root_user }}"
+      mysql_root_password: "{{ avideo_mysql_root_pass }}"
+      mysql_databases:
+        - name: "{{ avideo_db_name }}"
+        - name: "{{ avideo_encoder_db_name }}"
+      mysql_users:
+        - name: "{{ avideo_db_user }}"
+          password: "{{ avideo_db_pass }}"
+          priv: "{{ avideo_db_name }}.*:ALL"
+        - name: "{{ avideo_encoder_db_user }}"
+          password: "{{ avideo_encoder_db_pass }}"
+          priv: "{{ avideo_encoder_db_name }}.*:ALL"
+    when: avideo_install_mysql | bool

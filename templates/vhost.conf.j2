@@ -1,0 +1,16 @@
+<VirtualHost {{ avideo_listen_ip }}:{{ avideo_listen_port }}>
+
+    ServerName {{ avideo_servername }}
+    DocumentRoot {{ avideo_main_path }}
+
+    <Directory {{ avideo_main_path }}>
+        DirectoryIndex index.php
+        Options +FollowSymLinks
+        AllowOverride All
+        Require all granted
+    </Directory>
+
+    ErrorLog ${APACHE_LOG_DIR}/{{ avideo_servername }}.error.log
+    CustomLog ${APACHE_LOG_DIR}/{{ avideo_servername }}.access.log combined
+
+</VirtualHost>

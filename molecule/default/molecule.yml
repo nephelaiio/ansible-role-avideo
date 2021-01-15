@@ -1,0 +1,28 @@
+---
+dependency:
+  name: galaxy
+driver:
+  name: docker
+lint: |
+  set -e
+  yamllint .
+  ansible-lint .
+platforms:
+  - name: instance
+    image: geerlingguy/docker-${MOLECULE_DISTRO:-ubuntu2004}-ansible
+    command: ${MOLECULE_DOCKER_COMMAND:-""}
+    privileged: true
+    volumes:
+      - /sys/fs/cgroup:/sys/fs/cgroup:ro
+    pre_build_image: true
+provisioner:
+  name: ansible
+  inventory:
+    host_vars:
+      instance:
+        avideo_debug: true
+        avideo_listen_port: 8080
+        avideo_url: http://localhost:8080
+        avideo_site_title: this_is_a_test
+verifier:
+  name: testinfra

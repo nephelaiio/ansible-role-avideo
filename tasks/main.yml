@@ -1,0 +1,140 @@
+---
+- name: include variable overrides
+  set_fact:
+    _avideo_packages: "{{ avideo_packages | default(avideo_packages_default | sorted_get(overrides)) }}"
+  vars:
+    overrides:
+      - "{{ ansible_distribution | lower }}-{{ ansible_distribution_release | lower }}"
+      - "{{ ansible_distribution | lower }}-{{ ansible_distribution_major_version }}"
+      - "{{ ansible_distribution | lower }}"
+      - "{{ ansible_os_family | lower }}"
+      - "default"
+  tags:
+    - always
+
+- name: install avideo packages
+  package:
+    name: "{{ _avideo_packages }}"
+
+- name: deploy avideo
+  git:
+    repo: "{{ avideo_main_project }}"
+    dest: "{{ avideo_main_path  }}"
+    force: yes
+
+- name: deploy avideo encoder
+  git:
+    repo: "{{ avideo_encoder_project }}"
+    dest: "{{ avideo_encoder_path }}"
+    force: yes
+
+- name: manage video folder
+  file:
+    dest: "{{ avideo_main_path }}/videos"
+    state: directory
+    group: "{{ avideo_user }}"
+    owner: "{{ avideo_group }}"
+    mode: 0755
+
+- name: set permissions for avideo main
+  file:
+    dest: "{{ avideo_main_path }}"
+    state: directory
+    group: "{{ avideo_user }}"
+    owner: "{{ avideo_group }}"
+    recurse: yes
+
+- name: flush handlers
+  meta: flush_handlers
+
+- block:
+
+    - name: gather configuration status
+      stat:
+        path: "{{ avideo_main_path }}/videos/configuration.php"
+      register: avideo_config_stat
+
+    - name: initialize application configuration
+      uri:
+        url: "http://localhost:{{ avideo_listen_port }}/install/checkConfiguration.php"
+        method: POST
+        body_format: form-urlencoded
+        body:
+          webSiteRootURL: "{{ __avideo_url_normalized }}"
+          systemRootPath: "{{ __avideo_root_normalized }}"
+          webSiteTitle: "{{ avideo_site_title }}"
+          databaseHost: "{{ avideo_db_host }}"
+          databasePort: "{{ avideo_db_port }}"
+          databaseName: "{{ avideo_db_name }}"
+          databaseUser: "{{ avideo_db_user }}"
+          databasePass: "{{ avideo_db_pass }}"
+          mainLanguage: "{{ avideo_language }}"
+          systemAdminPass: "{{ avideo_admin_pass }}"
+          contactEmail: "{{ avideo_contact_email }}"
+          createTables: 2
+      when: not avideo_config_stat.stat.exists
+      no_log: "{{ not (avideo_debug | bool) }}"
+
+    - name: gather configuration status
+      stat:
+        path: "{{ avideo_main_path }}/videos/configuration.php"
+      register: avideo_config_stat
+
+    - name: verify configuration status
+      fail:
+        msg: "{{ avideo_main_path }}/videos/configuration.php not found"
+      when: not avideo_config_stat.stat.exists
+
+    - name: remove install directory
+      file:
+        dest: "{{ avideo_main_path }}/install"
+        state: absent
+      when: avideo_config_stat.stat.exists
+      changed_when: false
+
+    - name: manage avideo configuration
+      lineinfile:
+        path: "{{ avideo_main_path }}/videos/configuration.php"
+        regexp: "{{ item.regex }}"
+        line: "{{ item.line }}"
+        backrefs: "{{ item.backrefs | default(omit) }}"
+      loop_control:
+        label: "{{ item.label }}"
+      loop:
+        - label: webSiteRootUrl
+          regex: '^(\s*)\$global\[''webSiteRootUrl''\](\s*)=.*$'
+          line: '\1$global[''webSiteRootUrl''] = ''{{ __avideo_url_normalized }}'';'
+          backrefs: true
+        - label: systemRootPath
+          regex: '^\$global\[''systemRootPath''\](\s*)='
+          line: '$global[''systemRootPath''] = ''{{ __avideo_root_normalized }}'';'
+          backrefs: true
+        - label: webSiteRootPath
+          regex: '^\$global\[''webSiteRootPath''\](\s*)='
+          line: '$global[''webSiteRootPath''] = ''{{ __avideo_url_path_normalized }}'';'
+          backrefs: true
+        - label: mysqlHost
+          regex: '^\$mysqlHost(\s*)='
+          line: '$mysqlHost = ''{{ avideo_db_host }}'';'
+          backrefs: true
+        - label: mysqlPort
+          regex: '^\$mysqlPort(\s*)='
+          line: '$mysqlPort = ''{{ avideo_db_port }}'';'
+          backrefs: true
+        - label: mysqlUser
+          regex: '^\$mysqlUser(\s*)='
+          line: '$mysqlUser = ''{{ avideo_db_user }}'';'
+          backrefs: true
+        - label: mysqlPass
+          regex: '^\$mysqlPass(\s*)='
+          line: '$mysqlPass = ''{{ avideo_db_pass }}'';'
+          backrefs: true
+        - label: mysqlDatabase
+          regex: '^\$mysqlDatabase(\s*)='
+          line: '$mysqlDatabase = ''{{ avideo_db_name }}'';'
+          backrefs: true
+      no_log: "{{ not (avideo_debug | bool) }}"
+
+  when: avideo_config_manage | bool
+  tags:
+    - configure

@@ -1,0 +1,7 @@
+---
+- hosts: localhost
+
+  tasks:
+
+    - debug:
+        msg: "{{ 'http://google.com/' | urlsplit('path') }}"
