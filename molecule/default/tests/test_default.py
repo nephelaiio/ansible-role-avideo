@@ -1,2 +1,3 @@
-def test_php(host):
-    assert host.command('php --version').rc == 0
+def test_frontpage(host):
+    cmd = 'curl -s http://localhost:8080 | grep this_is_a_test'
+    assert host.command(cmd).rc == 0
