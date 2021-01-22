@@ -10,9 +10,6 @@ galaxy_info:
       versions:
         - focal
         - bionic
-    - name: Debian
-      versions:
-        - buster
   galaxy_tags: ['avideo']
 
 dependencies:
