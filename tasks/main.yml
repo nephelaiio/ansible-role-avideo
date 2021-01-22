@@ -20,12 +20,14 @@
   git:
     repo: "{{ avideo_main_project }}"
     dest: "{{ avideo_main_path  }}"
+    version: "{{ avideo_main_release }}"
     force: yes
 
 - name: deploy avideo encoder
   git:
     repo: "{{ avideo_encoder_project }}"
     dest: "{{ avideo_encoder_path }}"
+    version: "{{ avideo_encoder_release }}"
     force: yes
 
 - name: manage video folder
