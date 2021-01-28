@@ -19,6 +19,11 @@
       command: "/usr/local/bin/avideo-backup"
       register: backup_cmd
 
+    - name: remove avideo folder
+      file:
+        path: /var/www/avideo
+        state: absent
+
     - name: remove database
       command: "mysql --execute 'DROP DATABASE avideo; DROP DATABASE avideoencoder'"
 
