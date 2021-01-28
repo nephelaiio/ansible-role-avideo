@@ -1,0 +1,33 @@
+#!/usr/bin/env bash
+
+# {{ ansible_managed }}
+
+# find latest backup file
+unset -v latest_backup;
+
+latest_backup=/dev/null;
+for file in $(find "{{ backup_path }}" -type f -name "*{{ backup_identifier }}.tgz");
+do
+  [[ $file -nt $latest_backup ]] && latest_backup=$file;
+done
+
+# restore file backup
+if [ -f "$latest_backup" ]; then
+  # stop services
+  systemctl stop "{{ app_daemon }}";
+
+  tar xvzf "$latest_backup" -C /;
+
+  # restore database backup
+  mysqldump=$(tar tzf "$latest_backup" | grep mysqldump);
+  if [[ $mysqldump != '' ]]; then
+    mysql < /"$mysqldump";
+
+    rm -rf "/${mysqldump:?}";
+  fi
+
+  # start services
+  systemctl start "{{ app_daemon }}";
+else
+  echo "no suitable backup found at {{ backup_path }}";
+fi

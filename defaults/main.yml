@@ -30,7 +30,7 @@ avideo_listen_port: 80
 avideo_install_mysql: true
 avideo_mysql_root_user: root
 avideo_mysql_root_pass: root
-avideo_db_host: localhost
+avideo_db_host: 127.0.0.1
 avideo_db_port: 3306
 avideo_db_name: avideo
 avideo_db_user: avideo
@@ -54,6 +54,15 @@ avideo_contact_email: "avideo@{{ avideo_servername }}"
 avideo_site_title: AVideo
 avideo_language: us
 avideo_url: "https://{{ avideo_servername }}"
+avideo_backup_manage: yes
+avideo_backup_path: /backup
+avideo_backup_bin: /usr/local/bin/avideo-backup
+avideo_restore_bin: /usr/local/bin/avideo-restore
+avideo_backup_retention_days: 1
+avideo_backup_db_enable: yes
+avideo_backup_identifier: "{{ inventory_hostname }}-avideo"
+avideo_backup_cronjob_state: present
+avideo_backup_cronjob_schedule: daily
 __avideo_url_normalized: "{{ avideo_url | regex_replace('/$', '') }}/"
 __avideo_url_path_normalized: "{{ __avideo_url_normalized | urlsplit('path') }}"
 __avideo_root_normalized: "{{ avideo_main_path | regex_replace('/$', '') }}/"

@@ -140,3 +140,56 @@
   when: avideo_config_manage | bool
   tags:
     - configure
+
+- block:
+
+    - name: manage backup script
+      template:
+        src: templates/backup.sh.j2
+        dest: "{{ avideo_backup_bin }}"
+        group: root
+        owner: root
+        mode: 0750
+      vars:
+        backup_path: "{{ avideo_backup_path }}"
+        backup_source: "{{ avideo_main_path }}"
+        backup_db_enable: "{{ avideo_backup_db_enable }}"
+        backup_db_name: "{{ avideo_db_name }} {{ avideo_encoder_db_name }}"
+        backup_identifier: "{{ avideo_backup_identifier }}"
+        retention_period: "{{ avideo_backup_retention_days }}"
+
+    - name: manage restore script
+      template:
+        src: templates/restore.sh.j2
+        dest: "{{ avideo_restore_bin }}"
+        group: root
+        owner: root
+        mode: 0750
+      vars:
+        backup_path: "{{ avideo_backup_path }}"
+        backup_source: "{{ avideo_main_path }}"
+        backup_identifier: "{{ avideo_backup_identifier }}"
+        retention_period: "{{ avideo_backup_retention_days }}"
+        app_daemon: "{{ apache_daemon }}"
+
+    - name: manage backup cronjob
+      cron:
+        state: "{{ avideo_backup_cronjob_state }}"
+        name: avideo-backup
+        job: "{{ avideo_backup_bin }}"
+        special_time: "{{ avideo_backup_cronjob_schedule }}"
+
+    - name: create avideo backup motd pointers
+      copy:
+        dest: /etc/update-motd.d/99-avideo
+        content: |
+          #!/usr/bin/env bash
+          echo
+          echo run {{ avideo_backup_bin | basename }} to manually force snipeit backup creation
+          echo run {{ avideo_restore_bin | basename }} to manually restore latest snipeit backup
+          echo
+        mode: 0755
+
+  when: avideo_backup_manage | bool
+  tags:
+    - backup

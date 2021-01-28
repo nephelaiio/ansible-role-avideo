@@ -1,0 +1,30 @@
+#!/usr/bin/env bash
+
+# {{ ansible_managed }}
+
+_backup_source="{{ backup_source }}"
+
+{% if (backup_db_enable | bool) %}
+
+# create temporary directory
+TMPFILE=$(mktemp "{{ backup_path }}/mysqldump.XXXXXX")
+
+# back up database
+/usr/bin/mysqldump \
+--databases {{ backup_db_name }} \
+--single-transaction > "$TMPFILE"
+
+_backup_source="$_backup_source $TMPFILE"
+
+{% endif %}
+
+# create backup archive
+/bin/tar cvzf "{{ backup_path }}/$(date +%Y%m%d-%H%M%S).{{ backup_identifier }}.tgz" $_backup_source
+
+# clean up temporary directory
+if [ -f "$TMPFILE" ]; then
+    rm -f "$TMPFILE"
+fi
+
+# prune stale backups
+/usr/bin/find "{{ backup_path }}/" -name "*\.{{ backup_identifier }}.tgz" -ctime "+{{ retention_period }}" -delete
