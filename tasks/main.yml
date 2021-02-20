@@ -68,14 +68,18 @@
           databaseHost: "{{ avideo_db_host }}"
           databasePort: "{{ avideo_db_port }}"
           databaseName: "{{ avideo_db_name }}"
-          databaseUser: "{{ avideo_db_user }}"
-          databasePass: "{{ avideo_db_pass }}"
+          databaseUser: "{{ avideo_mysql_root_user }}"
+          databasePass: "{{ avideo_mysql_root_pass }}"
           mainLanguage: "{{ avideo_language }}"
           systemAdminPass: "{{ avideo_admin_pass }}"
           contactEmail: "{{ avideo_contact_email }}"
           createTables: 2
       when: not avideo_config_stat.stat.exists
-      no_log: "{{ not (avideo_debug | bool) }}"
+      register: avideo_config_stat_file
+#      no_log: "{{ not (avideo_debug | bool) }}"
+
+    - debug:
+        msg: "{{ avideo_config_stat_file }}"
 
     - name: gather configuration status
       stat:
