@@ -75,11 +75,7 @@
           contactEmail: "{{ avideo_contact_email }}"
           createTables: 2
       when: not avideo_config_stat.stat.exists
-      register: avideo_config_stat_file
-#      no_log: "{{ not (avideo_debug | bool) }}"
-
-    - debug:
-        msg: "{{ avideo_config_stat_file }}"
+      no_log: "{{ not (avideo_debug | bool) }}"
 
     - name: gather configuration status
       stat:
