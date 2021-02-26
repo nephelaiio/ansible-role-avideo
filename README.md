@@ -15,10 +15,41 @@ By default this role does not depend on any external roles. If any such dependen
 
 ## Example Playbook
 
-- hosts: servers
+All-in-one install:
+
+```
+- hosts: avideo
   roles:
-     - role: nephelaiio.avideo
-       avideo_package_state: latest
+    - role: nephelaiio.avideo
+      vars:
+        avideo_package_state: latest
+```
+
+All-in-one install with mysql root credentials
+
+```
+- hosts: avideo
+  roles:
+    - role: nephelaiio.avideo
+      vars:
+        avideo_package_state: latest
+        avideo_mysql_root_user: root
+        avideo_mysql_root_pass: ChangeMe
+        avideo_db_user: "{{ avideo_mysql_root_user }}"
+        avideo_db_pass: "{{ avideo_mysql_root_pass }}"
+        avideo_db_user_manage: false
+```
+
+Skip DB install:
+
+```
+- hosts: avideo
+  roles:
+    - role: nephelaiio.avideo
+      vars:
+        avideo_package_state: latest
+        avideo_mysql_install: false
+```
 
 ## Testing
 

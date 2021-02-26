@@ -35,9 +35,11 @@ avideo_db_port: 3306
 avideo_db_name: avideo
 avideo_db_user: avideo
 avideo_db_pass: ChangeMe01.
+avideo_db_user_manage: true
 avideo_encoder_db_name: avideoencoder
 avideo_encoder_db_user: avideoencoder
 avideo_encoder_db_pass: ChangeMe02.
+avideo_encoder_db_user_manage: true
 avideo_main_project: https://github.com/WWBN/AVideo.git
 avideo_main_release: 8.9.1
 avideo_main_path: /var/www/avideo
@@ -66,3 +68,17 @@ avideo_backup_cronjob_schedule: daily
 __avideo_url_normalized: "{{ avideo_url | regex_replace('/$', '') }}/"
 __avideo_url_path_normalized: "{{ __avideo_url_normalized | urlsplit('path') }}"
 __avideo_root_normalized: "{{ avideo_main_path | regex_replace('/$', '') }}/"
+
+__avideo_mysql_user:
+  name: "{{ avideo_db_user }}"
+  password: "{{ avideo_db_pass }}"
+  priv: "{{ avideo_db_name }}.*:ALL"
+__avideo_mysql_user_managed: "{{ (avideo_db_user_manage | bool) | ternary([__avideo_mysql_user], []) }}"
+
+__avideo_mysql_encoder_user:
+  name: "{{ avideo_encoder_db_user }}"
+  password: "{{ avideo_encoder_db_pass }}"
+  priv: "{{ avideo_encoder_db_name }}.*:ALL"
+__avideo_mysql_encoder_user_managed: "{{ (avideo_encoder_db_user_manage | bool) | ternary([__avideo_mysql_encoder_user], []) }}"
+
+__avideo_mysql_db_users: "{{ __avideo_mysql_user_managed + __avideo_mysql_encoder_user_managed }}"
