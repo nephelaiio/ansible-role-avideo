@@ -46,6 +46,11 @@
     owner: "{{ avideo_group }}"
     recurse: yes
 
+- name: manage php configuration
+  template:
+    src: templates/php.ini.j2
+    dest: "/etc/php/{{ avideo_php_version }}/apache2/php.ini"
+
 - name: flush handlers
   meta: flush_handlers
 

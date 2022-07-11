@@ -50,6 +50,7 @@ avideo_user: www-data
 avideo_group: www-data
 avideo_servername: localhost
 avideo_post_max_size: 100M
+avideo_upload_max_filesize: 100M
 avideo_admin_user: admin
 avideo_admin_pass: ChangeMe01.
 avideo_contact_email: "avideo@{{ avideo_servername }}"
