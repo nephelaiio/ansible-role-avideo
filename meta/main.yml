@@ -1,7 +1,7 @@
 ---
 galaxy_info:
   role_name: avideo
-  author: Ted Cook
+  author: nephelaiio
   description: An Ansible role to install and configure avideo
   license: MIT
   min_ansible_version: 2.2
@@ -38,11 +38,5 @@ dependencies:
       mysql_databases:
         - name: "{{ avideo_db_name }}"
         - name: "{{ avideo_encoder_db_name }}"
-      mysql_users:
-        - name: "{{ avideo_db_user }}"
-          password: "{{ avideo_db_pass }}"
-          priv: "{{ avideo_db_name }}.*:ALL"
-        - name: "{{ avideo_encoder_db_user }}"
-          password: "{{ avideo_encoder_db_pass }}"
-          priv: "{{ avideo_encoder_db_name }}.*:ALL"
+      mysql_users: "{{ __avideo_mysql_db_users }}"
     when: avideo_install_mysql | bool

@@ -1,0 +1,67 @@
+---
+- name: Converge
+  hosts: all
+  become: true
+
+  tasks:
+
+    - name: fix docker hosts file conflicts
+      command: sed -e '/^::1/d' /etc/hosts
+      args:
+        warn: no
+
+    - name: create backup dir
+      file:
+        state: directory
+        path: /backup
+
+    - name: take backup
+      command: "/usr/local/bin/avideo-backup"
+      register: backup_cmd
+
+    - name: remove avideo folder
+      file:
+        path: /var/www/avideo
+        state: absent
+
+    - name: remove database
+      command: "mysql --execute 'DROP DATABASE avideo; DROP DATABASE avideoencoder'"
+
+    - name: query databases
+      command: "mysql --execute \"show databases;\" -sN"
+      register: db_remove_query
+
+    - name: gather db metadata
+      set_fact:
+        db_names: "{{ db_remove_query.stdout }}"
+
+    - name: gather db status
+      set_fact:
+        db_present_avideo: "{{ db_names is search('avideo') }}"
+        db_present_encoder: "{{ db_names is search('avideoencoder') }}"
+
+    - name: ensure db removal
+      fail:
+        msg: "databases not removed"
+      when: db_present_avideo or db_present_encoder
+
+    - name: restore backup
+      command: "/usr/local/bin/avideo-restore"
+
+    - name: query databases
+      command: "mysql --execute \"show databases;\" -sN"
+      register: db_restore_query
+
+    - name: gather db metadata
+      set_fact:
+        db_names: "{{ db_restore_query.stdout }}"
+
+    - name: gather db status
+      set_fact:
+        db_absent_avideo: "{{ db_names is not search('avideo') }}"
+        db_absent_encoder: "{{ db_names is not search('avideoencoder') }}"
+
+    - name: ensure db restore
+      fail:
+        msg: "databases not removed"
+      when: db_absent_avideo or db_absent_encoder
