@@ -31,6 +31,8 @@ dependencies:
       php_packages_extra: "{{ avideo_php_packages }}"
       php_post_max_size: "{{ avideo_post_max_size }}"
       php_upload_max_filesize: "{{ avideo_post_max_size }}"
+      php_max_execution_time: "{{ avideo_max_execution_time }}"
+      php_memory_limit: "{{ avideo_memory_limit }}"
   - role: geerlingguy.mysql
     vars:
       mysql_root_user: "{{ avideo_mysql_root_user }}"

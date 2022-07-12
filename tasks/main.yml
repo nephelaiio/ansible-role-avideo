@@ -51,19 +51,19 @@
 
 - block:
 
-    - name: gather configuration status
+    - name: gather streamer configuration status
       stat:
         path: "{{ avideo_main_path }}/videos/configuration.php"
       register: avideo_config_stat
 
-    - name: initialize application configuration
+    - name: initialize streamer configuration
       uri:
         url: "http://localhost:{{ avideo_listen_port }}/install/checkConfiguration.php"
         method: POST
         body_format: form-urlencoded
         body:
-          webSiteRootURL: "{{ __avideo_url_normalized }}"
-          systemRootPath: "{{ __avideo_root_normalized }}"
+          webSiteRootURL: "{{ __avideo_streamer_url_normalized }}"
+          systemRootPath: "{{ __avideo_streamer_root_normalized }}"
           webSiteTitle: "{{ avideo_site_title }}"
           databaseHost: "{{ avideo_db_host }}"
           databasePort: "{{ avideo_db_port }}"
@@ -77,12 +77,12 @@
       when: not avideo_config_stat.stat.exists
       no_log: "{{ not (avideo_debug | bool) }}"
 
-    - name: gather configuration status
+    - name: gather streamer configuration status
       stat:
         path: "{{ avideo_main_path }}/videos/configuration.php"
       register: avideo_config_stat
 
-    - name: verify configuration status
+    - name: verify streamer configuration status
       fail:
         msg: "{{ avideo_main_path }}/videos/configuration.php not found"
       when: not avideo_config_stat.stat.exists
@@ -94,7 +94,7 @@
       when: avideo_config_stat.stat.exists
       changed_when: false
 
-    - name: manage avideo configuration
+    - name: manage streamer configuration
       lineinfile:
         path: "{{ avideo_main_path }}/videos/configuration.php"
         regexp: "{{ item.regex }}"
@@ -105,15 +105,15 @@
       loop:
         - label: webSiteRootUrl
           regex: '^(\s*)\$global\[''webSiteRootUrl''\](\s*)=.*$'
-          line: '\1$global[''webSiteRootUrl''] = ''{{ __avideo_url_normalized }}'';'
+          line: '\1$global[''webSiteRootUrl''] = ''{{ __avideo_streamer_url_normalized }}'';'
           backrefs: true
         - label: systemRootPath
           regex: '^\$global\[''systemRootPath''\](\s*)='
-          line: '$global[''systemRootPath''] = ''{{ __avideo_root_normalized }}'';'
+          line: '$global[''systemRootPath''] = ''{{ __avideo_streamer_root_normalized }}'';'
           backrefs: true
         - label: webSiteRootPath
           regex: '^\$global\[''webSiteRootPath''\](\s*)='
-          line: '$global[''webSiteRootPath''] = ''{{ __avideo_url_path_normalized }}'';'
+          line: '$global[''webSiteRootPath''] = ''{{ __avideo_streamer_url_path_normalized }}'';'
           backrefs: true
         - label: mysqlHost
           regex: '^\$mysqlHost(\s*)='
@@ -140,6 +140,104 @@
   when: avideo_config_manage | bool
   tags:
     - configure
+    - streamer
+
+- block:
+
+    - name: gather encoder configuration status
+      stat:
+        path: "{{ avideo_encoder_path }}/videos/configuration.php"
+      register: avideo_config_stat
+
+    - name: initialize encoder configuration
+      uri:
+        url: "http://localhost:{{ avideo_listen_port }}/upload/install/checkConfiguration.php"
+        method: POST
+        body_format: form-urlencoded
+        body:
+          webSiteRootURL: "{{ __avideo_encoder_url_normalized }}"
+          systemRootPath: "{{ __avideo_encoder_root_normalized }}"
+          webSiteTitle: "{{ avideo_site_title }}"
+          databaseHost: "{{ avideo_db_host }}"
+          databasePort: "{{ avideo_db_port }}"
+          databaseName: "{{ avideo_encoder_db_name }}"
+          databaseUser: "{{ avideo_encoder_db_user }}"
+          databasePass: "{{ avideo_encoder_db_pass }}"
+          mainLanguage: "{{ avideo_language }}"
+          systemAdminPass: "{{ avideo_admin_pass }}"
+          contactEmail: "{{ avideo_contact_email }}"
+          createTables: 2
+          defaultPriority: 1
+          siteURL: "{{ avideo_url }}"
+          inputUser: "{{ avideo_admin_user }}"
+          inputPassword: "{{ avideo_admin_pass }}"
+      when: not avideo_config_stat.stat.exists
+      no_log: "{{ not (avideo_debug | bool) }}"
+
+    - name: gather encoder configuration status
+      stat:
+        path: "{{ avideo_encoder_path }}/videos/configuration.php"
+      register: avideo_config_stat
+
+    - name: verify encoder configuration status
+      fail:
+        msg: "{{ avideo_encoder_path }}/videos/configuration.php not found"
+      when: not avideo_config_stat.stat.exists
+
+    - name: remove install directory
+      file:
+        dest: "{{ avideo_encoder_path }}/install"
+        state: absent
+      when: avideo_config_stat.stat.exists
+      changed_when: false
+
+    - name: manage encoder configuration
+      lineinfile:
+        path: "{{ avideo_encoder_path }}/videos/configuration.php"
+        regexp: "{{ item.regex }}"
+        line: "{{ item.line }}"
+        backrefs: "{{ item.backrefs | default(omit) }}"
+      loop_control:
+        label: "{{ item.label }}"
+      loop:
+        - label: webSiteRootUrl
+          regex: '^(\s*)\$global\[''webSiteRootUrl''\](\s*)=.*$'
+          line: '\1$global[''webSiteRootUrl''] = ''{{ __avideo_encoder_url_normalized }}'';'
+          backrefs: true
+        - label: systemRootPath
+          regex: '^\$global\[''systemRootPath''\](\s*)='
+          line: '$global[''systemRootPath''] = ''{{ __avideo_encoder_root_normalized }}'';'
+          backrefs: true
+        - label: webSiteRootPath
+          regex: '^\$global\[''webSiteRootPath''\](\s*)='
+          line: '$global[''webSiteRootPath''] = ''{{ __avideo_encoder_url_path_normalized }}'';'
+          backrefs: true
+        - label: mysqlHost
+          regex: '^\$mysqlHost(\s*)='
+          line: '$mysqlHost = ''{{ avideo_db_host }}'';'
+          backrefs: true
+        - label: mysqlPort
+          regex: '^\$mysqlPort(\s*)='
+          line: '$mysqlPort = ''{{ avideo_db_port }}'';'
+          backrefs: true
+        - label: mysqlUser
+          regex: '^\$mysqlUser(\s*)='
+          line: '$mysqlUser = ''{{ avideo_encoder_db_user }}'';'
+          backrefs: true
+        - label: mysqlPass
+          regex: '^\$mysqlPass(\s*)='
+          line: '$mysqlPass = ''{{ avideo_encoder_db_pass }}'';'
+          backrefs: true
+        - label: mysqlDatabase
+          regex: '^\$mysqlDatabase(\s*)='
+          line: '$mysqlDatabase = ''{{ avideo_encoder_db_name }}'';'
+          backrefs: true
+      no_log: "{{ not (avideo_debug | bool) }}"
+
+  when: avideo_config_manage | bool
+  tags:
+    - configure
+    - encoder
 
 - block:
 
