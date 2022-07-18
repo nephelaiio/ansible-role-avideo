@@ -157,15 +157,10 @@
         body:
           webSiteRootURL: "{{ __avideo_encoder_url_normalized }}"
           systemRootPath: "{{ __avideo_encoder_root_normalized }}"
-          webSiteTitle: "{{ avideo_site_title }}"
           databaseHost: "{{ avideo_db_host }}"
-          databasePort: "{{ avideo_db_port }}"
           databaseName: "{{ avideo_encoder_db_name }}"
           databaseUser: "{{ avideo_encoder_db_user }}"
           databasePass: "{{ avideo_encoder_db_pass }}"
-          mainLanguage: "{{ avideo_language }}"
-          systemAdminPass: "{{ avideo_admin_pass }}"
-          contactEmail: "{{ avideo_contact_email }}"
           createTables: 2
           defaultPriority: 1
           siteURL: "{{ avideo_url }}"
