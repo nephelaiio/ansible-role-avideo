@@ -73,7 +73,7 @@
           mainLanguage: "{{ avideo_language }}"
           systemAdminPass: "{{ avideo_admin_pass }}"
           contactEmail: "{{ avideo_contact_email }}"
-          createTables: 2
+          createTables: 1
       when: not avideo_config_stat.stat.exists
       no_log: "{{ not (avideo_debug | bool) }}"
 
@@ -149,25 +149,41 @@
         path: "{{ avideo_encoder_path }}/videos/configuration.php"
       register: avideo_config_stat
 
-    - name: initialize encoder configuration
-      uri:
-        url: "http://localhost:{{ avideo_listen_port }}/upload/install/checkConfiguration.php"
-        method: POST
-        body_format: form-urlencoded
-        body:
-          webSiteRootURL: "{{ __avideo_encoder_url_normalized }}"
-          systemRootPath: "{{ __avideo_encoder_root_normalized }}"
-          databaseHost: "{{ avideo_db_host }}"
-          databaseName: "{{ avideo_encoder_db_name }}"
-          databaseUser: "{{ avideo_encoder_db_user }}"
-          databasePass: "{{ avideo_encoder_db_pass }}"
-          createTables: 2
-          defaultPriority: 1
-          siteURL: "{{ avideo_url }}"
-          inputUser: "{{ avideo_admin_user }}"
-          inputPassword: "{{ avideo_admin_pass }}"
+    - block:
+
+        - name: mysql query streamer configuration
+          mysql_query:
+            login_db: "{{ avideo_encoder_db_name }}"
+            query: SELECT * FROM configurations_encoder
+          register: encoder_data
+
+        - name: remove record configurations_encoder
+          mysql_query:
+            login_db: "{{ avideo_encoder_db_name }}"
+            query: DELETE FROM configurations_encoder WHERE id=1
+          when: encoder_data.rowcount != 0
+
+        - name: initialize encoder configuration
+          uri:
+            url: "http://localhost:{{ avideo_listen_port }}/upload/install/checkConfiguration.php"
+            method: POST
+            body_format: form-urlencoded
+            body:
+              webSiteRootURL: "{{ __avideo_encoder_url_normalized }}"
+              systemRootPath: "{{ __avideo_encoder_root_normalized }}"
+              databaseHost: "{{ avideo_db_host }}"
+              databaseName: "{{ avideo_encoder_db_name }}"
+              databaseUser: "{{ avideo_encoder_db_user }}"
+              databasePass: "{{ avideo_encoder_db_pass }}"
+              createTables: 1
+              defaultPriority: 1
+              allowedStreamers: "{{ __avideo_streamer_url_normalized }}"
+              siteURL: "{{ __avideo_streamer_url_normalized }}"
+              inputUser: "{{ avideo_admin_user }}"
+              inputPassword: "{{ avideo_admin_pass }}"
+          no_log: "{{ not (avideo_debug | bool) }}"
+
       when: not avideo_config_stat.stat.exists
-      no_log: "{{ not (avideo_debug | bool) }}"
 
     - name: gather encoder configuration status
       stat:
