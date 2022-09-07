@@ -151,17 +151,27 @@
 
     - block:
 
-        - name: mysql query streamer configuration
+        - name: create configuration directory
+          file:
+            path: "{{ avideo_encoder_path }}/videos/"
+            state: directory
+            owner: www-data
+            group: www-data
+
+        - name: mysql query encoder configuration
           mysql_query:
             login_db: "{{ avideo_encoder_db_name }}"
-            query: SELECT * FROM configurations_encoder
+            query: SELECT * FROM configurations
           register: encoder_data
+          ignore_errors: true
 
         - name: remove record configurations_encoder
           mysql_query:
             login_db: "{{ avideo_encoder_db_name }}"
-            query: DELETE FROM configurations_encoder WHERE id=1
-          when: encoder_data.rowcount != 0
+            query: DELETE FROM configurations WHERE id=1
+          when:
+            - ( encoder_data.rowcount | default(0) != 0 )
+            - ( encoder_data.failed == false )
 
         - name: initialize encoder configuration
           uri:
@@ -182,6 +192,11 @@
               inputUser: "{{ avideo_admin_user }}"
               inputPassword: "{{ avideo_admin_pass }}"
           no_log: "{{ not (avideo_debug | bool) }}"
+
+        - name: configure encoderURL into streamer site
+          mysql_query:
+            login_db: "{{ avideo_db_name }}"
+            query: "UPDATE configurations SET encoderURL = '{{ __avideo_encoder_url_normalized }}' WHERE id=1"
 
       when: not avideo_config_stat.stat.exists
 
