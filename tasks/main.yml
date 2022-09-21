@@ -58,7 +58,7 @@
 
     - name: initialize streamer configuration
       uri:
-        url: "http://localhost:{{ avideo_listen_port }}/install/checkConfiguration.php"
+        url: "{{ __avideo_url }}/install/checkConfiguration.php"
         method: POST
         body_format: form-urlencoded
         body:
@@ -175,7 +175,7 @@
 
         - name: initialize encoder configuration
           uri:
-            url: "http://localhost:{{ avideo_listen_port }}/upload/install/checkConfiguration.php"
+            url: "{{ __avideo_url }}/upload/install/checkConfiguration.php"
             method: POST
             body_format: form-urlencoded
             body:
