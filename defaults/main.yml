@@ -4,6 +4,7 @@ avideo_packages_default:
     - ffmpeg
     - libimage-exiftool-perl
     - unzip
+    - npm
 avideo_pips:
   - youtube-dl
 avideo_php_version: "{{ (ansible_os_family == 'Debian') | ternary(php_default_version_debian, '') }}"
@@ -27,6 +28,10 @@ avideo_debug: false
 avideo_config_manage: true
 avideo_listen_ip: "*"
 avideo_listen_port: 80
+avideo_ssl_protocol: true
+avideo_listen_port_ssl: 443
+avideo_tls_certificate: "/etc/apache2/{{ avideo_servername }}.crt"
+avideo_tls_cert_key: "/etc/apache2/{{ avideo_servername }}.key"
 avideo_install_mysql: true
 avideo_mysql_root_user: root
 avideo_mysql_root_pass: root
@@ -41,10 +46,10 @@ avideo_encoder_db_user: avideoencoder
 avideo_encoder_db_pass: ChangeMe02.
 avideo_encoder_db_user_manage: true
 avideo_main_project: https://github.com/WWBN/AVideo.git
-avideo_main_release: 8.9.1
+avideo_main_release: 11.6
 avideo_main_path: /var/www/avideo
 avideo_encoder_project: https://github.com/WWBN/AVideo-Encoder.git
-avideo_encoder_release: master
+avideo_encoder_release: 3.7
 avideo_encoder_path: "{{ avideo_main_path }}/upload"
 avideo_user: www-data
 avideo_group: www-data
@@ -57,10 +62,8 @@ avideo_admin_pass: ChangeMe01.
 avideo_contact_email: "avideo@{{ avideo_servername }}"
 avideo_site_title: AVideo
 avideo_language: us
-avideo_url: "https://{{ avideo_servername }}"
-avideo_enconder_url: "{{ avideo_url }}/upload"
-avideo_backup_manage: yes
-avideo_backup_path: /backup
+avideo_backup_manage: no
+avideo_backup_path: /backups
 avideo_backup_bin: /usr/local/bin/avideo-backup
 avideo_restore_bin: /usr/local/bin/avideo-restore
 avideo_backup_retention_days: 1
@@ -68,10 +71,17 @@ avideo_backup_db_enable: yes
 avideo_backup_identifier: "{{ inventory_hostname }}-avideo"
 avideo_backup_cronjob_state: present
 avideo_backup_cronjob_schedule: daily
-__avideo_streamer_url_normalized: "{{ avideo_url | regex_replace('/$', '') }}/"
+
+__avideo_protocol: "{{ avideo_ssl_protocol | ternary('https','http') }}"
+__avideo_listen_port: "{{ ( avideo_listen_port != 80 ) | ternary(avideo_listen_port,omit) }}"
+__avideo_listen_port_ssl: "{{ ( avideo_listen_port_ssl != 443 ) | ternary(avideo_listen_port_ssl,omit) }}"
+__avideo_port: ":{{ avideo_ssl_protocol | ternary( __avideo_listen_port_ssl , __avideo_listen_port ) }}"
+__avideo_url: "{{ __avideo_protocol }}://{{ avideo_servername }}"
+__avideo_enconder_url: "{{ __avideo_url }}/upload"
+__avideo_streamer_url_normalized: "{{ __avideo_url | regex_replace('/$', '') }}/"
 __avideo_streamer_url_path_normalized: "{{ __avideo_streamer_url_normalized | urlsplit('path') }}"
 __avideo_streamer_root_normalized: "{{ avideo_main_path | regex_replace('/$', '') }}/"
-__avideo_encoder_url_normalized: "{{ avideo_enconder_url | regex_replace('/$', '') }}/"
+__avideo_encoder_url_normalized: "{{ __avideo_enconder_url | regex_replace('/$', '') }}/"
 __avideo_encoder_url_path_normalized: "{{ __avideo_encoder_url_normalized | urlsplit('path') }}"
 __avideo_encoder_root_normalized: "{{ avideo_encoder_path | regex_replace('/$', '') }}/"
 
