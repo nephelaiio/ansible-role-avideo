@@ -28,7 +28,6 @@ avideo_manage_plugin: false
 avideo_plugin: []
 # - url:
 #   name:
-#   config:
 # - url:
 #   name:
 avideo_plugin_store_user: avideo_user
@@ -37,7 +36,7 @@ avideo_debug: false
 avideo_config_manage: true
 avideo_listen_ip: "*"
 avideo_listen_port: 80
-avideo_ssl_protocol: true
+avideo_ssl_protocol: false
 avideo_listen_port_ssl: 443
 avideo_tls_certificate: "/etc/apache2/{{ avideo_servername }}.crt"
 avideo_tls_cert_key: "/etc/apache2/{{ avideo_servername }}.key"

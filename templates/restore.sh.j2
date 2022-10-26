@@ -5,7 +5,6 @@
 # find latest backup file
 unset -v latest_backup;
 
-latest_backup=/dev/null;
 for file in $(find "{{ backup_path }}" -type f -name "*{{ backup_identifier }}.tgz");
 do
   [[ $file -nt $latest_backup ]] && latest_backup=$file;

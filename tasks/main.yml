@@ -260,6 +260,31 @@
           backrefs: true
       no_log: "{{ not (avideo_debug | bool) }}"
 
+    - name: login to avideo
+      uri:
+        url: "{{ __avideo_url }}/objects/login.json.php"
+        method: POST
+        body_format: form-urlencoded
+        body:
+          user: "{{ avideo_admin_user }}"
+          pass: "{{ avideo_admin_pass }}"
+          redirectUri: "{{ __avideo_url }}"
+      register: _login_avideo
+
+    - name: encoder configuration
+      uri:
+        url: "{{ __avideo_url }}/admin/save.json.php"
+        method: POST
+        body_format: form-urlencoded
+        headers:
+          Cookie: "{{ _login_avideo.cookies_string }}"
+        body:
+          pluginName: CustomizeAdvanced
+          pluginsList: encoderNetwork|useEncoderNetworkRecomendation|doNotShowUploadMP4Button|doNotShowImportMP4Button|doNotShowEncoderButton|doNotShowEmbedButton
+          encoderNetwork: "{{ __avideo_encoder_url_normalized }}"
+          doNotShowUploadMP4Button: 1
+          doNotShowImportMP4Button: 1
+
   when: avideo_config_manage | bool
   tags:
     - configure
@@ -306,13 +331,6 @@
         mode: 0755
       loop: "{{ avideo_plugin }}"
 
-  when: avideo_manage_plugin | bool
-  tags:
-    - configure
-    # - plugin
-
-- block:
-
     - name: login to avideo
       uri:
         url: "{{ __avideo_url }}/objects/login.json.php"
@@ -345,7 +363,7 @@
     - name: enable/disable plugins
       vars:
         _avideo_plugin_uuid: "{{ _avideo_to_change | selectattr('name','eq',item.name) }}"
-        _enabled: "{{ _avideo_plugin_uuid | map(attribute='enabled') }}"
+        _enabled: "{{ _avideo_to_change | selectattr('name','eq',item.name) | map(attribute='enabled') }}"
       uri:
         url: "{{ __avideo_url }}/objects/pluginSwitch.json.php"
         method: POST
@@ -358,22 +376,6 @@
           dir: "{{ _avideo_plugin_uuid | map(attribute='dir') }}"
           enable: "{{ item.state | default('true') }}"
       loop: "{{ avideo_plugin }}"
-      when: _enabled == 'false'
-
-    - name: plugin configuration
-      vars:
-        _avideo_plugin_uuid: "{{ _avideo_to_change | selectattr('name','eq',item.name) }}"
-      uri:
-        url: "{{ __avideo_url }}/objects/pluginAddDataObject.json.php"
-        method: POST
-        body_format: form-urlencoded
-        headers:
-          Cookie: "{{ _login_avideo.cookies_string }}"
-        body:
-          id: "{{ _avideo_plugin_uuid | map(attribute='id') }}"
-          object_data: "{{ item.config }}"
-      loop: "{{ avideo_plugin }}"
-      when: item.config is defined
 
   when: avideo_manage_plugin | bool
   tags:

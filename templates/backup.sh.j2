@@ -14,7 +14,7 @@ TMPFILE=$(mktemp "{{ backup_path }}/mysqldump.XXXXXX")
 --databases {{ backup_db_name }} \
 --single-transaction > "$TMPFILE"
 
-_backup_source="$_backup_source $TMPFILE"
+_backup_source="$_backup_source $TMPFILE --exclude='.git' --exclude='node_modules'"
 
 {% endif %}
 
