@@ -260,10 +260,127 @@
           backrefs: true
       no_log: "{{ not (avideo_debug | bool) }}"
 
+    - name: login to avideo
+      uri:
+        url: "{{ __avideo_url }}/objects/login.json.php"
+        method: POST
+        body_format: form-urlencoded
+        body:
+          user: "{{ avideo_admin_user }}"
+          pass: "{{ avideo_admin_pass }}"
+          redirectUri: "{{ __avideo_url }}"
+      register: _login_avideo
+
+    - name: encoder configuration
+      uri:
+        url: "{{ __avideo_url }}/admin/save.json.php"
+        method: POST
+        body_format: form-urlencoded
+        headers:
+          Cookie: "{{ _login_avideo.cookies_string }}"
+        body:
+          pluginName: CustomizeAdvanced
+          pluginsList: encoderNetwork|useEncoderNetworkRecomendation|doNotShowUploadMP4Button|doNotShowImportMP4Button|doNotShowEncoderButton|doNotShowEmbedButton
+          encoderNetwork: "{{ __avideo_encoder_url_normalized }}"
+          doNotShowUploadMP4Button: 1
+          doNotShowImportMP4Button: 1
+
   when: avideo_config_manage | bool
   tags:
     - configure
     - encoder
+
+- block:
+
+    - name: install dependecies
+      apt:
+        name: unzip
+
+    - name: login to https://youphp.tube/marketplace/
+      uri:
+        url: https://youphp.tube/marketplace/objects/loginAVideo.json.php
+        method: POST
+        body_format: form-urlencoded
+        body:
+          user: "{{ avideo_plugin_store_user }}"
+          pass: "{{ avideo_plugin_store_password }}"
+      register: _login_youphp_tube
+
+    - name: download avideo plugin
+      get_url:
+        url: "{{ item.url }}"
+        dest: "{{ __avideo_plugin_path }}/{{ item.name }}.zip"
+        timeout: 300
+        headers:
+          Cookie: "{{ _login_youphp_tube.set_cookie }}"
+      loop: "{{ avideo_plugin }}"
+
+    - name: uncompress plugin archives
+      unarchive:
+        src: "{{ __avideo_plugin_path }}/{{ item.name }}.zip"
+        dest: "{{ __avideo_plugin_path }}"
+        remote_src: yes
+      loop: "{{ avideo_plugin }}"
+
+    - name: manage video folder
+      file:
+        dest: "{{ __avideo_plugin_path }}/{{ item.name }}"
+        state: directory
+        group: "{{ avideo_user }}"
+        owner: "{{ avideo_group }}"
+        mode: 0755
+      loop: "{{ avideo_plugin }}"
+
+    - name: login to avideo
+      uri:
+        url: "{{ __avideo_url }}/objects/login.json.php"
+        method: POST
+        body_format: form-urlencoded
+        body:
+          user: "{{ avideo_admin_user }}"
+          pass: "{{ avideo_admin_pass }}"
+          redirectUri: "{{ __avideo_url }}"
+      register: _login_avideo
+
+    - name: query all plugins available
+      uri:
+        url: "{{ __avideo_url }}/objects/pluginsAvailable.json.php"
+        method: POST
+        body_format: json
+        headers:
+          Cookie: "{{ _login_avideo.cookies_string }}"
+      register: _avideo_plugin_available
+
+    - name: extract data plugin
+      vars:
+        _avideo_list_plugin: "{{ avideo_plugin | map(attribute='name') | list }}"
+      set_fact:
+        _avideo_to_change: "{{ _avideo_to_change | default([]) + [item] }}"
+      loop: "{{ _avideo_plugin_available.json.rows }}"
+      when: item.name in _avideo_list_plugin
+      no_log: true
+
+    - name: enable/disable plugins
+      vars:
+        _avideo_plugin_uuid: "{{ _avideo_to_change | selectattr('name','eq',item.name) }}"
+        _enabled: "{{ _avideo_to_change | selectattr('name','eq',item.name) | map(attribute='enabled') }}"
+      uri:
+        url: "{{ __avideo_url }}/objects/pluginSwitch.json.php"
+        method: POST
+        body_format: form-urlencoded
+        headers:
+          Cookie: "{{ _login_avideo.cookies_string }}"
+        body:
+          uuid: "{{ _avideo_plugin_uuid | map(attribute='uuid') }}"
+          name: "{{ _avideo_plugin_uuid | map(attribute='name') }}"
+          dir: "{{ _avideo_plugin_uuid | map(attribute='dir') }}"
+          enable: "{{ item.state | default('true') }}"
+      loop: "{{ avideo_plugin }}"
+
+  when: avideo_manage_plugin | bool
+  tags:
+    - configure
+    - plugin
 
 - block:
 

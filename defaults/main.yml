@@ -24,11 +24,19 @@ avideo_php_packages:
   - "php{{ avideo_php_version }}-cli"
   - "php{{ avideo_php_version }}-zip"
   - "php{{ avideo_php_version }}-ldap"
+avideo_manage_plugin: false
+avideo_plugin: []
+# - url:
+#   name:
+# - url:
+#   name:
+avideo_plugin_store_user: avideo_user
+avideo_plugin_store_password: ChangeMe01.
 avideo_debug: false
 avideo_config_manage: true
 avideo_listen_ip: "*"
 avideo_listen_port: 80
-avideo_ssl_protocol: true
+avideo_ssl_protocol: false
 avideo_listen_port_ssl: 443
 avideo_tls_certificate: "/etc/apache2/{{ avideo_servername }}.crt"
 avideo_tls_cert_key: "/etc/apache2/{{ avideo_servername }}.key"
@@ -84,6 +92,7 @@ __avideo_streamer_root_normalized: "{{ avideo_main_path | regex_replace('/$', ''
 __avideo_encoder_url_normalized: "{{ __avideo_enconder_url | regex_replace('/$', '') }}/"
 __avideo_encoder_url_path_normalized: "{{ __avideo_encoder_url_normalized | urlsplit('path') }}"
 __avideo_encoder_root_normalized: "{{ avideo_encoder_path | regex_replace('/$', '') }}/"
+__avideo_plugin_path: "{{ avideo_main_path }}/plugin"
 
 __avideo_mysql_user:
   name: "{{ avideo_db_user }}"
