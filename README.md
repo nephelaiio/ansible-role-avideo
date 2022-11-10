@@ -1,6 +1,6 @@
 # nephelaiio.avideo
 
-[![Build Status](https://github.com/nephelaiio/ansible-role-avideo/workflows/CI/badge.svg)](https://github.com/nephelaiio/ansible-role-avideo/actions)
+[![Build Status](https://github.com/nephelaiio/ansible-role-avideo/workflows/molecule/badge.svg)](https://github.com/nephelaiio/ansible-role-avideo/actions)
 [![Ansible Galaxy](http://img.shields.io/badge/ansible--galaxy-nephelaiio.avideo.vim-blue.svg)](https://galaxy.ansible.com/nephelaiio/avideo/)
 
 An [ansible role](https://galaxy.ansible.com/nephelaiio/avideo) to install and configure avideo

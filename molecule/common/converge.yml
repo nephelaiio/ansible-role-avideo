@@ -1,13 +1,17 @@
 ---
-- name: Converge
+- name: converge
+
   hosts: all
+
   become: true
 
   pre_tasks:
-    - name: Update apt cache.
+
+    - name: update apt cache
       apt:
         update_cache: yes
       when: (ansible_os_family | lower) == 'debian'
 
   roles:
-    - role: nephelaiio.avideo
+
+    - nephelaiio.avideo

@@ -1,11 +1,8 @@
 ---
-name: CI
+name: molecule
 
 on:
   pull_request:
-  push:
-    branches:
-      - master
   schedule:
     - cron: "0 5 * * 0"
 
@@ -56,10 +53,10 @@ jobs:
           python-version: '3.x'
 
       - name: install test dependencies.
-        run: pip3 install ansible molecule[docker] docker pytest pytest-testinfra
+        run: pip3 install poetry
 
       - name: run Molecule tests.
-        run: molecule test
+        run: poetry run molecule test
         env:
           PY_COLORS: '1'
           ANSIBLE_FORCE_COLOR: '1'
@@ -72,6 +69,7 @@ jobs:
       matrix:
         distro:
           - ubuntu2004
+          - ubuntu1804
     steps:
       - name: check out the codebase.
         uses: actions/checkout@v2
@@ -84,10 +82,10 @@ jobs:
           python-version: '3.x'
 
       - name: install test dependencies.
-        run: pip3 install ansible molecule[docker] docker pytest pytest-testinfra
+        run: pip3 install poetry
 
       - name: run Molecule tests.
-        run: molecule test -s users
+        run: poetry run molecule test -s users
         env:
           PY_COLORS: '1'
           ANSIBLE_FORCE_COLOR: '1'

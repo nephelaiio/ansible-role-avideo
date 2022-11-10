@@ -28,6 +28,9 @@ scenario:
     - destroy
 provisioner:
   name: ansible
+  playbooks:
+    converge: ../common/converge.yml
+    verify: ../common/verify.yml
   inventory:
     host_vars:
       instance:
@@ -36,4 +39,4 @@ provisioner:
         avideo_url: http://localhost:8080
         avideo_site_title: this_is_a_test
 verifier:
-  name: testinfra
+  name: ansible

@@ -1,0 +1,15 @@
+---
+- name: verify
+
+  hosts: all
+
+  gather_facts: false
+
+  tasks:
+
+    - name: verify avideo front page
+      ansible.builtin.uri:
+        url: "{{ avideo_url }}"
+        return_content: true
+      register: uri_query
+      failed_when: avideo_site_title not in uri_query.content

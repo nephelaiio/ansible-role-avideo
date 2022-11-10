@@ -41,4 +41,4 @@ provisioner:
         avideo_db_pass: "{{ avideo_mysql_root_pass }}"
         avideo_db_user_manage: false
 verifier:
-  name: testinfra
+  name: ansible
