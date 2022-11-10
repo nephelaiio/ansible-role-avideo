@@ -16,7 +16,7 @@ jobs:
     name: lint
     runs-on: ubuntu-latest
     steps:
-      - name: check out the codebase.
+      - name: check out the codebase
         uses: actions/checkout@v2
         with:
           path: 'nephelaiio.avideo'
@@ -26,8 +26,11 @@ jobs:
         with:
           python-version: '3.x'
 
-      - name: install test dependencies.
+      - name: install poetry
         run: pip3 install poetry
+
+      - name: install test dependencies
+        run: poetry install
 
       - name: lint code.
         run: |
@@ -43,7 +46,7 @@ jobs:
           - ubuntu2004
           - ubuntu1804
     steps:
-      - name: check out the codebase.
+      - name: check out the codebase
         uses: actions/checkout@v2
         with:
           path: 'nephelaiio.avideo'
@@ -53,10 +56,13 @@ jobs:
         with:
           python-version: '3.x'
 
-      - name: install test dependencies.
+      - name: install poetry
         run: pip3 install poetry
 
-      - name: run Molecule tests.
+      - name: install test dependencies
+        run: poetry install
+
+      - name: run Molecule tests
         run: poetry run molecule test
         env:
           PY_COLORS: '1'
@@ -72,7 +78,7 @@ jobs:
           - ubuntu2004
           - ubuntu1804
     steps:
-      - name: check out the codebase.
+      - name: check out the codebase
         uses: actions/checkout@v2
         with:
           path: 'nephelaiio.avideo'
@@ -82,8 +88,11 @@ jobs:
         with:
           python-version: '3.x'
 
-      - name: install test dependencies.
+      - name: install poetry
         run: pip3 install poetry
+
+      - name: install test dependencies
+        run: poetry install
 
       - name: run Molecule tests.
         run: poetry run molecule test -s users
