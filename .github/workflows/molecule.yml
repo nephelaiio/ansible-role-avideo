@@ -27,7 +27,7 @@ jobs:
           python-version: '3.x'
 
       - name: install test dependencies.
-        run: pip3 install ansible-lint[community,yamllint]
+        run: pip3 install poetry
 
       - name: lint code.
         run: |
