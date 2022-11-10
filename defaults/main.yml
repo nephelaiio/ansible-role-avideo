@@ -26,10 +26,6 @@ avideo_php_packages:
   - "php{{ avideo_php_version }}-ldap"
 avideo_manage_plugin: false
 avideo_plugin: []
-# - url:
-#   name:
-# - url:
-#   name:
 avideo_plugin_store_user: avideo_user
 avideo_plugin_store_password: ChangeMe01.
 avideo_debug: false
@@ -80,10 +76,10 @@ avideo_backup_identifier: "{{ inventory_hostname }}-avideo"
 avideo_backup_cronjob_state: present
 avideo_backup_cronjob_schedule: daily
 
-__avideo_protocol: "{{ avideo_ssl_protocol | ternary('https','http') }}"
-__avideo_listen_port: "{{ ( avideo_listen_port != 80 ) | ternary(avideo_listen_port,omit) }}"
-__avideo_listen_port_ssl: "{{ ( avideo_listen_port_ssl != 443 ) | ternary(avideo_listen_port_ssl,omit) }}"
-__avideo_port: ":{{ avideo_ssl_protocol | ternary( __avideo_listen_port_ssl , __avideo_listen_port ) }}"
+__avideo_protocol: "{{ avideo_ssl_protocol | ternary('https', 'http') }}"
+__avideo_listen_port: "{{ (avideo_listen_port != 80) | ternary(avideo_listen_port, omit) }}"
+__avideo_listen_port_ssl: "{{ (avideo_listen_port_ssl != 443) | ternary(avideo_listen_port_ssl, omit) }}"
+__avideo_port: ":{{ avideo_ssl_protocol | ternary(__avideo_listen_port_ssl, __avideo_listen_port) }}"
 __avideo_url: "{{ __avideo_protocol }}://{{ avideo_servername }}"
 __avideo_enconder_url: "{{ __avideo_url }}/upload"
 __avideo_streamer_url_normalized: "{{ __avideo_url | regex_replace('/$', '') }}/"
