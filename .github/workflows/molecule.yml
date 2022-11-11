@@ -34,8 +34,8 @@ jobs:
 
       - name: lint code
         run: |
-          poetry run yamllint . -c .ansible-lint.yml
-          poetry run ansible-lint .
+          poetry run yamllint .
+          poetry run ansible-lint . -c .ansible-lint.yml
 
   molecule:
     name: molecule tests

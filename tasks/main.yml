@@ -20,21 +20,12 @@
   delay: 10
   until: _package_install is succeeded
 
-- name: retrieve safe directory list from git config
-  ansible.builtin.command: git config --get-all safe.directory
-  failed_when: false
+- name: add git avideo repo to safe directories
+  community.general.git_config:
+    scope: global
+    name: safe.directory
+    value: "{{ avideo_main_path }}"
   changed_when: false
-  register: _gitconfig
-
-- name: remove git config safe directories
-  ansible.builtin.command: git config --global --unset-all safe.directory
-  when: _gitconfig.stdout != ""
-
-- name: add git repos to safe directories
-  ansible.builtin.command: "git config --global --add safe.directory {{ item }}"
-  loop:
-    - "{{ avideo_main_path }}"
-    - "{{ avideo_encoder_path }}"
 
 - name: deploy avideo
   ansible.builtin.git:
@@ -43,12 +34,26 @@
     version: "{{ avideo_main_release }}"
     force: yes
 
+- name: add git avideo encoder repo to safe directories
+  community.general.git_config:
+    scope: global
+    name: safe.directory
+    value: "{{ avideo_encoder_path }}"
+  changed_when: false
+
 - name: deploy avideo encoder
   ansible.builtin.git:
     repo: "{{ avideo_encoder_project }}"
     dest: "{{ avideo_encoder_path }}"
     version: "{{ avideo_encoder_release }}"
     force: yes
+
+- name: clean git safe directory list
+  community.general.git_config:
+    scope: global
+    name: safe.directory
+    state: absent
+  changed_when: false
 
 - name: manage video folder
   ansible.builtin.file:
