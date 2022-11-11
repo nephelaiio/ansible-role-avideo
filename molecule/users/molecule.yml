@@ -35,6 +35,7 @@ provisioner:
   playbooks:
     converge: ../common/converge.yml
     verify: ../common/verify.yml
+    destroy: ../common/destroy.yml
   inventory:
     host_vars:
       instance:
