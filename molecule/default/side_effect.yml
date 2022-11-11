@@ -65,11 +65,3 @@
       fail:
         msg: "databases not restored"
       when: db_absent_avideo or db_absent_encoder
-
-    - name: verify avideo front page
-      ansible.builtin.uri:
-        url: "https://{{ avideo_servername }}"
-        return_content: true
-        validate_certs: false
-      register: uri_query
-      failed_when: avideo_site_title not in uri_query.content
