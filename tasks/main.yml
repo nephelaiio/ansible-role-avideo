@@ -20,6 +20,22 @@
   delay: 10
   until: _package_install is succeeded
 
+- name: retrieve safe directory list from git config
+  ansible.builtin.command: git config --get-all safe.directory
+  failed_when: false
+  changed_when: false
+  register: _gitconfig
+
+- name: remove git config safe directories
+  ansible.builtin.command: git config --global --unset-all safe.directory
+  when: _gitconfig.stdout != ""
+
+- name: add git repos to safe directories
+  ansible.builtin.command: "git config --global --add safe.directory {{ item }}"
+  loop:
+    - "{{ avideo_main_path }}"
+    - "{{ avideo_encoder_path }}"
+
 - name: deploy avideo
   ansible.builtin.git:
     repo: "{{ avideo_main_project }}"
@@ -83,6 +99,7 @@
           systemAdminPass: "{{ avideo_admin_pass }}"
           contactEmail: "{{ avideo_contact_email }}"
           createTables: 1
+        validate_certs: false
       when: not avideo_config_stat.stat.exists
       no_log: "{{ not (avideo_debug | bool) }}"
 
@@ -146,7 +163,7 @@
           backrefs: true
       no_log: "{{ not (avideo_debug | bool) }}"
 
-- name: configure encodier
+- name: configure encoder
   when: avideo_config_manage | bool
   tags:
     - configure
@@ -166,7 +183,7 @@
           ansible.builtin.file:
             path: "{{ avideo_encoder_path }}/videos/"
             state: directory
-            mode: 0644
+            mode: 0750
             owner: www-data
             group: www-data
 
@@ -203,6 +220,7 @@
               siteURL: "{{ __avideo_streamer_url_normalized }}"
               inputUser: "{{ avideo_admin_user }}"
               inputPassword: "{{ avideo_admin_pass }}"
+            validate_certs: false
           no_log: "{{ not (avideo_debug | bool) }}"
 
         - name: configure encoderURL into streamer site
@@ -210,15 +228,11 @@
             login_db: "{{ avideo_db_name }}"
             query: "UPDATE configurations SET encoderURL = '{{ __avideo_encoder_url_normalized }}' WHERE id=1"
 
-    - name: gather encoder configuration status
+    - name: verify encoder configuration status
       ansible.builtin.stat:
         path: "{{ avideo_encoder_path }}/videos/configuration.php"
       register: avideo_config_stat
-
-    - name: verify encoder configuration status
-      ansible.builtin.fail:
-        msg: "{{ avideo_encoder_path }}/videos/configuration.php not found"
-      when: not avideo_config_stat.stat.exists
+      failed_when: not avideo_config_stat.stat.exists
 
     - name: remove install directory
       ansible.builtin.file:
@@ -279,6 +293,7 @@
           user: "{{ avideo_admin_user }}"
           pass: "{{ avideo_admin_pass }}"
           redirectUri: "{{ __avideo_url }}"
+        validate_certs: false
       register: _login_avideo
 
     - name: encoder configuration
@@ -294,6 +309,7 @@
           encoderNetwork: "{{ __avideo_encoder_url_normalized }}"
           doNotShowUploadMP4Button: 1
           doNotShowImportMP4Button: 1
+        validate_certs: false
 
 - name: manage avideo plugins
   when: avideo_manage_plugin | bool
@@ -356,16 +372,18 @@
         body:
           user: "{{ avideo_admin_user }}"
           pass: "{{ avideo_admin_pass }}"
-          redirectUri: "{{ __avideo_url }}"
+          redirectUri: "{{ _avideo_url }}"
+        validate_certs: false
       register: _login_avideo
 
     - name: query all plugins available
       ansible.builtin.uri:
-        url: "{{ __avideo_url }}/objects/pluginsAvailable.json.php"
+        url: "{{ _avideo_url }}/objects/pluginsAvailable.json.php"
         method: POST
         body_format: json
         headers:
           Cookie: "{{ _login_avideo.cookies_string }}"
+        validate_certs: false
       register: _avideo_plugin_available
 
     - name: extract data plugin
@@ -379,7 +397,7 @@
 
     - name: enable/disable plugins
       ansible.builtin.uri:
-        url: "{{ __avideo_url }}/objects/pluginSwitch.json.php"
+        url: "{{ _avideo_url }}/objects/pluginSwitch.json.php"
         method: POST
         body_format: form-urlencoded
         headers:
@@ -389,6 +407,7 @@
           name: "{{ _avideo_plugin_uuid | map(attribute='name') }}"
           dir: "{{ _avideo_plugin_uuid | map(attribute='dir') }}"
           enable: "{{ item.state | default('true') }}"
+        validate_certs: false
       vars:
         _avideo_plugin_uuid: "{{ _avideo_to_change | selectattr('name', 'eq', item.name) }}"
         _enabled: "{{ _avideo_to_change | selectattr('name', 'eq', item.name) | map(attribute='enabled') }}"

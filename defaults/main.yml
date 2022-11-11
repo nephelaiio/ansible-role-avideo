@@ -24,6 +24,7 @@ avideo_php_packages:
   - "php{{ avideo_php_version }}-cli"
   - "php{{ avideo_php_version }}-zip"
   - "php{{ avideo_php_version }}-ldap"
+
 avideo_manage_plugin: false
 avideo_plugin: []
 avideo_plugin_store_user: avideo_user
@@ -31,9 +32,6 @@ avideo_plugin_store_password: ChangeMe01.
 avideo_debug: false
 avideo_config_manage: true
 avideo_listen_ip: "*"
-avideo_listen_port: 80
-avideo_ssl_protocol: false
-avideo_listen_port_ssl: 443
 avideo_tls_certificate: "/etc/apache2/{{ avideo_servername }}.crt"
 avideo_tls_cert_key: "/etc/apache2/{{ avideo_servername }}.key"
 avideo_install_mysql: true
@@ -76,11 +74,7 @@ avideo_backup_identifier: "{{ inventory_hostname }}-avideo"
 avideo_backup_cronjob_state: present
 avideo_backup_cronjob_schedule: daily
 
-__avideo_protocol: "{{ avideo_ssl_protocol | ternary('https', 'http') }}"
-__avideo_listen_port: "{{ (avideo_listen_port != 80) | ternary(avideo_listen_port, omit) }}"
-__avideo_listen_port_ssl: "{{ (avideo_listen_port_ssl != 443) | ternary(avideo_listen_port_ssl, omit) }}"
-__avideo_port: ":{{ avideo_ssl_protocol | ternary(__avideo_listen_port_ssl, __avideo_listen_port) }}"
-__avideo_url: "{{ __avideo_protocol }}://{{ avideo_servername }}"
+__avideo_url: "https://{{ avideo_servername }}"
 __avideo_enconder_url: "{{ __avideo_url }}/upload"
 __avideo_streamer_url_normalized: "{{ __avideo_url | regex_replace('/$', '') }}/"
 __avideo_streamer_url_path_normalized: "{{ __avideo_streamer_url_normalized | urlsplit('path') }}"
@@ -95,11 +89,9 @@ __avideo_mysql_user:
   password: "{{ avideo_db_pass }}"
   priv: "{{ avideo_db_name }}.*:ALL"
 __avideo_mysql_user_managed: "{{ (avideo_db_user_manage | bool) | ternary([__avideo_mysql_user], []) }}"
-
 __avideo_mysql_encoder_user:
   name: "{{ avideo_encoder_db_user }}"
   password: "{{ avideo_encoder_db_pass }}"
   priv: "{{ avideo_encoder_db_name }}.*:ALL"
 __avideo_mysql_encoder_user_managed: "{{ (avideo_encoder_db_user_manage | bool) | ternary([__avideo_mysql_encoder_user], []) }}"
-
 __avideo_mysql_db_users: "{{ __avideo_mysql_user_managed + __avideo_mysql_encoder_user_managed }}"

@@ -1,4 +1,4 @@
-<VirtualHost {{ avideo_listen_ip }}:{{ avideo_listen_port }}>
+<VirtualHost {{ avideo_listen_ip }}:80>
     ServerName {{ avideo_servername }}
     ServerAdmin {{ avideo_contact_email }}
     DocumentRoot {{ avideo_main_path }}
@@ -11,7 +11,7 @@
     RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI}
 </VirtualHost>
 
-<VirtualHost {{ avideo_listen_ip }}:{{ avideo_listen_port_ssl }}>
+<VirtualHost {{ avideo_listen_ip }}:443>
     ServerName {{ avideo_servername }}
     ServerAdmin {{ avideo_contact_email }}
     DocumentRoot {{ avideo_main_path }}
@@ -22,12 +22,13 @@
     SSLEngine on
     SSLCertificateFile {{ avideo_tls_certificate }}
     SSLCertificateKeyFile {{ avideo_tls_cert_key }}
-</VirtualHost>
 
-<Directory {{ avideo_main_path }}>
-    Options Indexes FollowSymLinks
-    AllowOverride All
-    Require all granted
-    Order Allow,Deny
-    Allow from All
-</Directory>
+    <Directory {{ avideo_main_path }}>
+        Options Indexes FollowSymLinks
+        AllowOverride All
+        Require all granted
+        Order Allow,Deny
+        Allow from All
+    </Directory>
+
+</VirtualHost>

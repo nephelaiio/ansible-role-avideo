@@ -23,8 +23,6 @@ dependencies:
       apache_remove_default_vhost: true
       apache_vhosts_filename: "{{ avideo_servername }}.conf"
       apache_vhosts_template: vhost.conf.j2
-      apache_listen_ip: "{{ avideo_listen_ip }}"
-      apache_listen_port: "{{ avideo_listen_port }}"
   - role: geerlingguy.php
     vars:
       php_webserver_daemon: "{{ apache_daemon }}"
