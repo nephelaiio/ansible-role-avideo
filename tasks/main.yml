@@ -20,6 +20,13 @@
   delay: 10
   until: _package_install is succeeded
 
+- name: clean git safe directory list
+  community.general.git_config:
+    scope: global
+    name: safe.directory
+    state: absent
+  changed_when: false
+
 - name: add git avideo repo to safe directories
   community.general.git_config:
     scope: global
