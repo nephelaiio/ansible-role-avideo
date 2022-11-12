@@ -26,7 +26,7 @@ dependencies:
   - role: geerlingguy.php
     vars:
       php_webserver_daemon: "{{ apache_daemon }}"
-      php_packages_extra: "{{ avideo_php_packages }}"
+      php_packages: "{{ avideo_php_packages }}"
       php_post_max_size: "{{ avideo_post_max_size }}"
       php_upload_max_filesize: "{{ avideo_post_max_size }}"
       php_max_execution_time: "{{ avideo_max_execution_time }}"

@@ -9,7 +9,15 @@ avideo_pips:
   - youtube-dl
 
 avideo_php_packages:
+  - libpcre3-dev
   - libapache2-mod-php
+  - php-common
+  - php-dev
+  - php-fpm
+  - php-imap
+  - php-mbstring
+  - php-apcu
+  - php-sqlite3
   - php-mysql
   - php-readline
   - php-cli
