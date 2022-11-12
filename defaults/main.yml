@@ -7,23 +7,22 @@ avideo_packages_default:
     - npm
 avideo_pips:
   - youtube-dl
-avideo_php_version: "{{ (ansible_os_family == 'Debian') | ternary(php_default_version_debian, '') }}"
+
 avideo_php_packages:
-  - "libapache2-mod-php"
-  - "libapache2-mod-php{{ avideo_php_version }}"
-  - "php{{ avideo_php_version }}-mysql"
-  - "php{{ avideo_php_version }}-readline"
-  - "php{{ avideo_php_version }}-cli"
-  - "php{{ avideo_php_version }}-common"
-  - "php{{ avideo_php_version }}-json"
-  - "php{{ avideo_php_version }}-opcache"
-  - "php{{ avideo_php_version }}-readline"
-  - "php{{ avideo_php_version }}-curl"
-  - "php{{ avideo_php_version }}-gd"
-  - "php{{ avideo_php_version }}-xml"
-  - "php{{ avideo_php_version }}-cli"
-  - "php{{ avideo_php_version }}-zip"
-  - "php{{ avideo_php_version }}-ldap"
+  - libapache2-mod-php
+  - php-mysql
+  - php-readline
+  - php-cli
+  - php-common
+  - php-json
+  - php-opcache
+  - php-readline
+  - php-curl
+  - php-gd
+  - php-xml
+  - php-cli
+  - php-zip
+  - php-ldap
 
 avideo_manage_plugin: false
 avideo_plugin: []
@@ -31,7 +30,7 @@ avideo_plugin_store_user: avideo_user
 avideo_plugin_store_password: ChangeMe01.
 avideo_debug: false
 avideo_config_manage: true
-avideo_listen_ip: "*"
+avideo_listen_ip: *
 avideo_tls_certificate: "/etc/apache2/{{ avideo_servername }}.crt"
 avideo_tls_cert_key: "/etc/apache2/{{ avideo_servername }}.key"
 avideo_install_mysql: true
