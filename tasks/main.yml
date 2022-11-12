@@ -426,7 +426,7 @@
         dest: "{{ avideo_backup_bin }}"
         group: root
         owner: root
-        mode: 0750
+        mode: 0755
       vars:
         backup_path: "{{ avideo_backup_path }}"
         backup_source: "{{ avideo_main_path }}"
@@ -441,7 +441,7 @@
         dest: "{{ avideo_restore_bin }}"
         group: root
         owner: root
-        mode: 0750
+        mode: 0755
       vars:
         backup_path: "{{ avideo_backup_path }}"
         backup_source: "{{ avideo_main_path }}"
