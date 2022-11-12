@@ -45,11 +45,12 @@ jobs:
         scenario:
           - default
           - users
-        include:
-          - distro: ubuntu2004
-            command: /lib/systemd/systemd
-          - distro: ubuntu2204
-            command: /lib/systemd/systemd
+        distro:
+          - ubuntu2004
+          - ubuntu2204
+        command:
+          - /lib/systemd/systemd
+
     steps:
 
       - name: check out the codebase
