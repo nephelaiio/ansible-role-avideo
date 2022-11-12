@@ -1,6 +1,8 @@
 ---
-- name: Converge
+- name: side effect
+
   hosts: all
+
   become: true
 
   tasks:
@@ -63,5 +65,5 @@
 
     - name: ensure db restore
       fail:
-        msg: "databases not removed"
+        msg: "databases not restored"
       when: db_absent_avideo or db_absent_encoder

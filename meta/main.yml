@@ -4,7 +4,7 @@ galaxy_info:
   author: nephelaiio
   description: An Ansible role to install and configure avideo
   license: MIT
-  min_ansible_version: 2.2
+  min_ansible_version: "2.8"
   platforms:
     - name: Ubuntu
       versions:
@@ -23,12 +23,10 @@ dependencies:
       apache_remove_default_vhost: true
       apache_vhosts_filename: "{{ avideo_servername }}.conf"
       apache_vhosts_template: vhost.conf.j2
-      apache_listen_ip: "{{ avideo_listen_ip }}"
-      apache_listen_port: "{{ avideo_listen_port }}"
   - role: geerlingguy.php
     vars:
       php_webserver_daemon: "{{ apache_daemon }}"
-      php_packages_extra: "{{ avideo_php_packages }}"
+      php_packages: "{{ avideo_php_packages }}"
       php_post_max_size: "{{ avideo_post_max_size }}"
       php_upload_max_filesize: "{{ avideo_post_max_size }}"
       php_max_execution_time: "{{ avideo_max_execution_time }}"

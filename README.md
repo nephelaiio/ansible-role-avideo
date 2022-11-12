@@ -1,6 +1,6 @@
 # nephelaiio.avideo
 
-[![Build Status](https://github.com/nephelaiio/ansible-role-avideo/workflows/CI/badge.svg)](https://github.com/nephelaiio/ansible-role-avideo/actions)
+[![Build Status](https://github.com/nephelaiio/ansible-role-avideo/workflows/molecule/badge.svg)](https://github.com/nephelaiio/ansible-role-avideo/actions)
 [![Ansible Galaxy](http://img.shields.io/badge/ansible--galaxy-nephelaiio.avideo.vim-blue.svg)](https://galaxy.ansible.com/nephelaiio/avideo/)
 
 An [ansible role](https://galaxy.ansible.com/nephelaiio/avideo) to install and configure avideo
@@ -53,14 +53,20 @@ Skip DB install:
 
 ## Testing
 
-Please make sure your environment has [docker](https://www.docker.com) installed in order to run role validation tests. Additional python dependencies are listed in the [requirements file](https://github.com/nephelaiio/ansible-role-requirements/blob/master/requirements.txt)
+Please make sure your environment has [podman](https://podman.io) installed in order to run role validation tests. Additional python dependencies are managed with poetry
 
 Role is tested against the following distributions (docker images):
 
   * Ubuntu Focal
   * Ubuntu Bionic
 
-You can test the role directly from sources using command ` molecule test `
+You can test the role directly from sources using the follwoing commands
+
+ ``` sh
+ $ poetry install
+ $ poetry run molecule test
+```
+
 
 ## License
 

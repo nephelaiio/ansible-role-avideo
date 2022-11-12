@@ -1,0 +1,13 @@
+---
+- name: verify
+
+  hosts: localhost
+
+  gather_facts: false
+
+  tasks:
+
+    - name: remove podman container
+      containers.podman.podman_container:
+        name: "{{ inventory_hostname }}"
+        state: absent

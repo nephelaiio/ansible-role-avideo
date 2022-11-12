@@ -7,37 +7,38 @@ avideo_packages_default:
     - npm
 avideo_pips:
   - youtube-dl
-avideo_php_version: "{{ (ansible_os_family == 'Debian') | ternary(php_default_version_debian, '') }}"
+
 avideo_php_packages:
-  - "libapache2-mod-php"
-  - "libapache2-mod-php{{ avideo_php_version }}"
-  - "php{{ avideo_php_version }}-mysql"
-  - "php{{ avideo_php_version }}-readline"
-  - "php{{ avideo_php_version }}-cli"
-  - "php{{ avideo_php_version }}-common"
-  - "php{{ avideo_php_version }}-json"
-  - "php{{ avideo_php_version }}-opcache"
-  - "php{{ avideo_php_version }}-readline"
-  - "php{{ avideo_php_version }}-curl"
-  - "php{{ avideo_php_version }}-gd"
-  - "php{{ avideo_php_version }}-xml"
-  - "php{{ avideo_php_version }}-cli"
-  - "php{{ avideo_php_version }}-zip"
-  - "php{{ avideo_php_version }}-ldap"
+  - libpcre3-dev
+  - libapache2-mod-php
+  - php-common
+  - php-dev
+  - php-fpm
+  - php-imap
+  - php-mbstring
+  - php-apcu
+  - php-sqlite3
+  - php-mysql
+  - php-readline
+  - php-cli
+  - php-common
+  - php-json
+  - php-opcache
+  - php-readline
+  - php-curl
+  - php-gd
+  - php-xml
+  - php-cli
+  - php-zip
+  - php-ldap
+
 avideo_manage_plugin: false
 avideo_plugin: []
-# - url:
-#   name:
-# - url:
-#   name:
 avideo_plugin_store_user: avideo_user
 avideo_plugin_store_password: ChangeMe01.
 avideo_debug: false
 avideo_config_manage: true
 avideo_listen_ip: "*"
-avideo_listen_port: 80
-avideo_ssl_protocol: false
-avideo_listen_port_ssl: 443
 avideo_tls_certificate: "/etc/apache2/{{ avideo_servername }}.crt"
 avideo_tls_cert_key: "/etc/apache2/{{ avideo_servername }}.key"
 avideo_install_mysql: true
@@ -70,7 +71,7 @@ avideo_admin_pass: ChangeMe01.
 avideo_contact_email: "avideo@{{ avideo_servername }}"
 avideo_site_title: AVideo
 avideo_language: us
-avideo_backup_manage: no
+avideo_backup_manage: true
 avideo_backup_path: /backups
 avideo_backup_bin: /usr/local/bin/avideo-backup
 avideo_restore_bin: /usr/local/bin/avideo-restore
@@ -80,11 +81,7 @@ avideo_backup_identifier: "{{ inventory_hostname }}-avideo"
 avideo_backup_cronjob_state: present
 avideo_backup_cronjob_schedule: daily
 
-__avideo_protocol: "{{ avideo_ssl_protocol | ternary('https','http') }}"
-__avideo_listen_port: "{{ ( avideo_listen_port != 80 ) | ternary(avideo_listen_port,omit) }}"
-__avideo_listen_port_ssl: "{{ ( avideo_listen_port_ssl != 443 ) | ternary(avideo_listen_port_ssl,omit) }}"
-__avideo_port: ":{{ avideo_ssl_protocol | ternary( __avideo_listen_port_ssl , __avideo_listen_port ) }}"
-__avideo_url: "{{ __avideo_protocol }}://{{ avideo_servername }}"
+__avideo_url: "https://{{ avideo_servername }}"
 __avideo_enconder_url: "{{ __avideo_url }}/upload"
 __avideo_streamer_url_normalized: "{{ __avideo_url | regex_replace('/$', '') }}/"
 __avideo_streamer_url_path_normalized: "{{ __avideo_streamer_url_normalized | urlsplit('path') }}"
@@ -99,11 +96,9 @@ __avideo_mysql_user:
   password: "{{ avideo_db_pass }}"
   priv: "{{ avideo_db_name }}.*:ALL"
 __avideo_mysql_user_managed: "{{ (avideo_db_user_manage | bool) | ternary([__avideo_mysql_user], []) }}"
-
 __avideo_mysql_encoder_user:
   name: "{{ avideo_encoder_db_user }}"
   password: "{{ avideo_encoder_db_pass }}"
   priv: "{{ avideo_encoder_db_name }}.*:ALL"
 __avideo_mysql_encoder_user_managed: "{{ (avideo_encoder_db_user_manage | bool) | ternary([__avideo_mysql_encoder_user], []) }}"
-
 __avideo_mysql_db_users: "{{ __avideo_mysql_user_managed + __avideo_mysql_encoder_user_managed }}"

@@ -1,6 +1,6 @@
 ---
 - name: include variable overrides
-  set_fact:
+  ansible.builtin.set_fact:
     _avideo_packages: "{{ avideo_packages | default(avideo_packages_default | sorted_get(overrides)) }}"
   vars:
     overrides:
@@ -13,25 +13,46 @@
     - always
 
 - name: install avideo packages
-  package:
+  ansible.builtin.package:
     name: "{{ _avideo_packages }}"
+  register: _package_install
+  retries: 3
+  delay: 10
+  until: _package_install is succeeded
+
+- name: retrieve safe directory list from git config
+  ansible.builtin.command: git config --get-all safe.directory
+  failed_when: false
+  changed_when: false
+  register: _gitconfig
+
+- name: remove git config safe directories
+  ansible.builtin.command: git config --global --unset-all safe.directory
+  when: _gitconfig.stdout != ""
+
+- name: add git repos to safe directories
+  ansible.builtin.command: "git config --global --add safe.directory {{ item }}"
+  changed_when: false
+  loop:
+    - "{{ avideo_main_path }}"
+    - "{{ avideo_encoder_path }}"
 
 - name: deploy avideo
-  git:
+  ansible.builtin.git:
     repo: "{{ avideo_main_project }}"
-    dest: "{{ avideo_main_path  }}"
+    dest: "{{ avideo_main_path }}"
     version: "{{ avideo_main_release }}"
     force: yes
 
 - name: deploy avideo encoder
-  git:
+  ansible.builtin.git:
     repo: "{{ avideo_encoder_project }}"
     dest: "{{ avideo_encoder_path }}"
     version: "{{ avideo_encoder_release }}"
     force: yes
 
 - name: manage video folder
-  file:
+  ansible.builtin.file:
     dest: "{{ avideo_main_path }}/videos"
     state: directory
     group: "{{ avideo_user }}"
@@ -39,7 +60,7 @@
     mode: 0755
 
 - name: set permissions for avideo main
-  file:
+  ansible.builtin.file:
     dest: "{{ avideo_main_path }}"
     state: directory
     group: "{{ avideo_user }}"
@@ -47,17 +68,22 @@
     recurse: yes
 
 - name: flush handlers
-  meta: flush_handlers
+  ansible.builtin.meta: flush_handlers
 
-- block:
+- name: configure avideo
+  when: avideo_config_manage | bool
+  tags:
+    - configure
+    - streamer
+  block:
 
     - name: gather streamer configuration status
-      stat:
+      ansible.builtin.stat:
         path: "{{ avideo_main_path }}/videos/configuration.php"
       register: avideo_config_stat
 
     - name: initialize streamer configuration
-      uri:
+      ansible.builtin.uri:
         url: "{{ __avideo_url }}/install/checkConfiguration.php"
         method: POST
         body_format: form-urlencoded
@@ -74,28 +100,29 @@
           systemAdminPass: "{{ avideo_admin_pass }}"
           contactEmail: "{{ avideo_contact_email }}"
           createTables: 1
+        validate_certs: false
       when: not avideo_config_stat.stat.exists
       no_log: "{{ not (avideo_debug | bool) }}"
 
     - name: gather streamer configuration status
-      stat:
+      ansible.builtin.stat:
         path: "{{ avideo_main_path }}/videos/configuration.php"
       register: avideo_config_stat
 
     - name: verify streamer configuration status
-      fail:
+      ansible.builtin.fail:
         msg: "{{ avideo_main_path }}/videos/configuration.php not found"
       when: not avideo_config_stat.stat.exists
 
     - name: remove install directory
-      file:
+      ansible.builtin.file:
         dest: "{{ avideo_main_path }}/install"
         state: absent
       when: avideo_config_stat.stat.exists
       changed_when: false
 
     - name: manage streamer configuration
-      lineinfile:
+      ansible.builtin.lineinfile:
         path: "{{ avideo_main_path }}/videos/configuration.php"
         regexp: "{{ item.regex }}"
         line: "{{ item.line }}"
@@ -137,44 +164,47 @@
           backrefs: true
       no_log: "{{ not (avideo_debug | bool) }}"
 
+- name: configure encoder
   when: avideo_config_manage | bool
   tags:
     - configure
-    - streamer
-
-- block:
+    - encoder
+  block:
 
     - name: gather encoder configuration status
-      stat:
+      ansible.builtin.stat:
         path: "{{ avideo_encoder_path }}/videos/configuration.php"
       register: avideo_config_stat
 
-    - block:
+    - name: initialize encoder configuration
+      when: not avideo_config_stat.stat.exists
+      block:
 
         - name: create configuration directory
-          file:
+          ansible.builtin.file:
             path: "{{ avideo_encoder_path }}/videos/"
             state: directory
+            mode: 0750
             owner: www-data
             group: www-data
 
         - name: mysql query encoder configuration
-          mysql_query:
+          community.mysql.mysql_query:
             login_db: "{{ avideo_encoder_db_name }}"
             query: SELECT * FROM configurations
           register: encoder_data
           ignore_errors: true
 
         - name: remove record configurations_encoder
-          mysql_query:
+          community.mysql.mysql_query:
             login_db: "{{ avideo_encoder_db_name }}"
             query: DELETE FROM configurations WHERE id=1
           when:
             - ( encoder_data.rowcount | default(0) != 0 )
-            - ( encoder_data.failed == false )
+            - not encoder_data.failed
 
         - name: initialize encoder configuration
-          uri:
+          ansible.builtin.uri:
             url: "{{ __avideo_url }}/upload/install/checkConfiguration.php"
             method: POST
             body_format: form-urlencoded
@@ -191,34 +221,29 @@
               siteURL: "{{ __avideo_streamer_url_normalized }}"
               inputUser: "{{ avideo_admin_user }}"
               inputPassword: "{{ avideo_admin_pass }}"
+            validate_certs: false
           no_log: "{{ not (avideo_debug | bool) }}"
 
         - name: configure encoderURL into streamer site
-          mysql_query:
+          community.mysql.mysql_query:
             login_db: "{{ avideo_db_name }}"
             query: "UPDATE configurations SET encoderURL = '{{ __avideo_encoder_url_normalized }}' WHERE id=1"
 
-      when: not avideo_config_stat.stat.exists
-
-    - name: gather encoder configuration status
-      stat:
+    - name: verify encoder configuration status
+      ansible.builtin.stat:
         path: "{{ avideo_encoder_path }}/videos/configuration.php"
       register: avideo_config_stat
-
-    - name: verify encoder configuration status
-      fail:
-        msg: "{{ avideo_encoder_path }}/videos/configuration.php not found"
-      when: not avideo_config_stat.stat.exists
+      failed_when: not avideo_config_stat.stat.exists
 
     - name: remove install directory
-      file:
+      ansible.builtin.file:
         dest: "{{ avideo_encoder_path }}/install"
         state: absent
       when: avideo_config_stat.stat.exists
       changed_when: false
 
     - name: manage encoder configuration
-      lineinfile:
+      ansible.builtin.lineinfile:
         path: "{{ avideo_encoder_path }}/videos/configuration.php"
         regexp: "{{ item.regex }}"
         line: "{{ item.line }}"
@@ -261,7 +286,7 @@
       no_log: "{{ not (avideo_debug | bool) }}"
 
     - name: login to avideo
-      uri:
+      ansible.builtin.uri:
         url: "{{ __avideo_url }}/objects/login.json.php"
         method: POST
         body_format: form-urlencoded
@@ -269,10 +294,11 @@
           user: "{{ avideo_admin_user }}"
           pass: "{{ avideo_admin_pass }}"
           redirectUri: "{{ __avideo_url }}"
+        validate_certs: false
       register: _login_avideo
 
     - name: encoder configuration
-      uri:
+      ansible.builtin.uri:
         url: "{{ __avideo_url }}/admin/save.json.php"
         method: POST
         body_format: form-urlencoded
@@ -284,20 +310,17 @@
           encoderNetwork: "{{ __avideo_encoder_url_normalized }}"
           doNotShowUploadMP4Button: 1
           doNotShowImportMP4Button: 1
+        validate_certs: false
 
-  when: avideo_config_manage | bool
+- name: manage avideo plugins
+  when: avideo_manage_plugin | bool
   tags:
     - configure
-    - encoder
+    - plugin
+  block:
 
-- block:
-
-    - name: install dependecies
-      apt:
-        name: unzip
-
-    - name: login to https://youphp.tube/marketplace/
-      uri:
+    - name: login to plugin marketplace
+      ansible.builtin.uri:
         url: https://youphp.tube/marketplace/objects/loginAVideo.json.php
         method: POST
         body_format: form-urlencoded
@@ -307,23 +330,34 @@
       register: _login_youphp_tube
 
     - name: download avideo plugin
-      get_url:
-        url: "{{ item.url }}"
-        dest: "{{ __avideo_plugin_path }}/{{ item.name }}.zip"
-        timeout: 300
-        headers:
-          Cookie: "{{ _login_youphp_tube.set_cookie }}"
-      loop: "{{ avideo_plugin }}"
+      block:
 
-    - name: uncompress plugin archives
-      unarchive:
-        src: "{{ __avideo_plugin_path }}/{{ item.name }}.zip"
-        dest: "{{ __avideo_plugin_path }}"
-        remote_src: yes
-      loop: "{{ avideo_plugin }}"
+        - name: download avideo plugin
+          ansible.builtin.get_url:
+            url: "{{ item.url }}"
+            dest: "{{ __avideo_plugin_path }}/{{ item.name }}.zip"
+            mode: 0600
+            timeout: 300
+            headers:
+              Cookie: "{{ _login_youphp_tube.set_cookie }}"
+          loop: "{{ avideo_plugin }}"
+
+        - name: uncompress plugin archives
+          ansible.builtin.unarchive:
+            src: "{{ __avideo_plugin_path }}/{{ item.name }}.zip"
+            dest: "{{ __avideo_plugin_path }}"
+            remote_src: yes
+          loop: "{{ avideo_plugin }}"
+
+      always:
+
+        - name: remove plugin download
+          ansible.builtin.file:
+            dest: "{{ __avideo_plugin_path }}/{{ item.name }}.zip"
+            state: absent
 
     - name: manage video folder
-      file:
+      ansible.builtin.file:
         dest: "{{ __avideo_plugin_path }}/{{ item.name }}"
         state: directory
         group: "{{ avideo_user }}"
@@ -332,40 +366,39 @@
       loop: "{{ avideo_plugin }}"
 
     - name: login to avideo
-      uri:
+      ansible.builtin.uri:
         url: "{{ __avideo_url }}/objects/login.json.php"
         method: POST
         body_format: form-urlencoded
         body:
           user: "{{ avideo_admin_user }}"
           pass: "{{ avideo_admin_pass }}"
-          redirectUri: "{{ __avideo_url }}"
+          redirectUri: "{{ _avideo_url }}"
+        validate_certs: false
       register: _login_avideo
 
     - name: query all plugins available
-      uri:
-        url: "{{ __avideo_url }}/objects/pluginsAvailable.json.php"
+      ansible.builtin.uri:
+        url: "{{ _avideo_url }}/objects/pluginsAvailable.json.php"
         method: POST
         body_format: json
         headers:
           Cookie: "{{ _login_avideo.cookies_string }}"
+        validate_certs: false
       register: _avideo_plugin_available
 
     - name: extract data plugin
+      ansible.builtin.set_fact:
+        _avideo_to_change: "{{ _avideo_to_change | default([]) + [item] }}"
       vars:
         _avideo_list_plugin: "{{ avideo_plugin | map(attribute='name') | list }}"
-      set_fact:
-        _avideo_to_change: "{{ _avideo_to_change | default([]) + [item] }}"
       loop: "{{ _avideo_plugin_available.json.rows }}"
       when: item.name in _avideo_list_plugin
       no_log: true
 
     - name: enable/disable plugins
-      vars:
-        _avideo_plugin_uuid: "{{ _avideo_to_change | selectattr('name','eq',item.name) }}"
-        _enabled: "{{ _avideo_to_change | selectattr('name','eq',item.name) | map(attribute='enabled') }}"
-      uri:
-        url: "{{ __avideo_url }}/objects/pluginSwitch.json.php"
+      ansible.builtin.uri:
+        url: "{{ _avideo_url }}/objects/pluginSwitch.json.php"
         method: POST
         body_format: form-urlencoded
         headers:
@@ -375,22 +408,25 @@
           name: "{{ _avideo_plugin_uuid | map(attribute='name') }}"
           dir: "{{ _avideo_plugin_uuid | map(attribute='dir') }}"
           enable: "{{ item.state | default('true') }}"
+        validate_certs: false
+      vars:
+        _avideo_plugin_uuid: "{{ _avideo_to_change | selectattr('name', 'eq', item.name) }}"
+        _enabled: "{{ _avideo_to_change | selectattr('name', 'eq', item.name) | map(attribute='enabled') }}"
       loop: "{{ avideo_plugin }}"
 
-  when: avideo_manage_plugin | bool
+- name: manage backup and restore scripts
+  when: avideo_backup_manage | bool
   tags:
-    - configure
-    - plugin
-
-- block:
+    - backup
+  block:
 
     - name: manage backup script
-      template:
+      ansible.builtin.template:
         src: templates/backup.sh.j2
         dest: "{{ avideo_backup_bin }}"
         group: root
         owner: root
-        mode: 0750
+        mode: 0755
       vars:
         backup_path: "{{ avideo_backup_path }}"
         backup_source: "{{ avideo_main_path }}"
@@ -400,12 +436,12 @@
         retention_period: "{{ avideo_backup_retention_days }}"
 
     - name: manage restore script
-      template:
+      ansible.builtin.template:
         src: templates/restore.sh.j2
         dest: "{{ avideo_restore_bin }}"
         group: root
         owner: root
-        mode: 0750
+        mode: 0755
       vars:
         backup_path: "{{ avideo_backup_path }}"
         backup_source: "{{ avideo_main_path }}"
@@ -414,14 +450,14 @@
         app_daemon: "{{ apache_daemon }}"
 
     - name: manage backup cronjob
-      cron:
+      ansible.builtin.cron:
         state: "{{ avideo_backup_cronjob_state }}"
         name: avideo-backup
         job: "{{ avideo_backup_bin }}"
         special_time: "{{ avideo_backup_cronjob_schedule }}"
 
     - name: create avideo backup motd pointers
-      copy:
+      ansible.builtin.copy:
         dest: /etc/update-motd.d/99-avideo
         content: |
           #!/usr/bin/env bash
@@ -430,7 +466,3 @@
           echo run {{ avideo_restore_bin | basename }} to manually restore latest snipeit backup
           echo
         mode: 0755
-
-  when: avideo_backup_manage | bool
-  tags:
-    - backup
