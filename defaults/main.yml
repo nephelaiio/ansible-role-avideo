@@ -30,7 +30,7 @@ avideo_plugin_store_user: avideo_user
 avideo_plugin_store_password: ChangeMe01.
 avideo_debug: false
 avideo_config_manage: true
-avideo_listen_ip: *
+avideo_listen_ip: "*"
 avideo_tls_certificate: "/etc/apache2/{{ avideo_servername }}.crt"
 avideo_tls_cert_key: "/etc/apache2/{{ avideo_servername }}.key"
 avideo_install_mysql: true
