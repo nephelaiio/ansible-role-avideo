@@ -355,6 +355,7 @@
           ansible.builtin.file:
             dest: "{{ __avideo_plugin_path }}/{{ item.name }}.zip"
             state: absent
+          loop: "{{ avideo_plugin }}"
 
     - name: manage video folder
       ansible.builtin.file:
@@ -373,13 +374,13 @@
         body:
           user: "{{ avideo_admin_user }}"
           pass: "{{ avideo_admin_pass }}"
-          redirectUri: "{{ _avideo_url }}"
+          redirectUri: "{{ __avideo_url }}"
         validate_certs: false
       register: _login_avideo
 
     - name: query all plugins available
       ansible.builtin.uri:
-        url: "{{ _avideo_url }}/objects/pluginsAvailable.json.php"
+        url: "{{ __avideo_url }}/objects/pluginsAvailable.json.php"
         method: POST
         body_format: json
         headers:
@@ -398,7 +399,7 @@
 
     - name: enable/disable plugins
       ansible.builtin.uri:
-        url: "{{ _avideo_url }}/objects/pluginSwitch.json.php"
+        url: "{{ __avideo_url }}/objects/pluginSwitch.json.php"
         method: POST
         body_format: form-urlencoded
         headers:
