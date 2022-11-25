@@ -374,17 +374,16 @@
         _enabled: "{{ _avideo_to_change | selectattr('name', 'eq', item.name) | map(attribute='enabled') }}"
       loop: "{{ avideo_plugin }}"
 
-- name: manage avideo plugin tables
+- name: manage plugin tables
+  ansible.builtin.command: "php -f ./installPluginsTables.php 1"
+  args:
+    chdir: "{{ avideo_main_path }}/install"
+  failed_when: false
+  changed_when: false
   when: avideo_manage_plugin | bool
   tags:
     - configure
     - plugin_tables
-  block:
-
-    - name: manage plugin tables
-      ansible.builtin.command: "php -f ./installPluginsTables.php 1"
-      args:
-        chdir: "{{ avideo_main_path }}/install"
 
 - name: manage avideo plugin settings
   when: avideo_manage_plugin | bool
