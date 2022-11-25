@@ -114,13 +114,6 @@
         msg: "{{ avideo_main_path }}/videos/configuration.php not found"
       when: not avideo_config_stat.stat.exists
 
-    - name: remove install directory
-      ansible.builtin.file:
-        dest: "{{ avideo_main_path }}/install"
-        state: absent
-      when: avideo_config_stat.stat.exists
-      changed_when: false
-
     - name: manage streamer configuration
       ansible.builtin.lineinfile:
         path: "{{ avideo_main_path }}/videos/configuration.php"
@@ -235,13 +228,6 @@
       register: avideo_config_stat
       failed_when: not avideo_config_stat.stat.exists
 
-    - name: remove install directory
-      ansible.builtin.file:
-        dest: "{{ avideo_encoder_path }}/install"
-        state: absent
-      when: avideo_config_stat.stat.exists
-      changed_when: false
-
     - name: manage encoder configuration
       ansible.builtin.lineinfile:
         path: "{{ avideo_encoder_path }}/videos/configuration.php"
@@ -284,33 +270,6 @@
           line: '$mysqlDatabase = ''{{ avideo_encoder_db_name }}'';'
           backrefs: true
       no_log: "{{ not (avideo_debug | bool) }}"
-
-    - name: login to avideo
-      ansible.builtin.uri:
-        url: "{{ __avideo_url }}/objects/login.json.php"
-        method: POST
-        body_format: form-urlencoded
-        body:
-          user: "{{ avideo_admin_user }}"
-          pass: "{{ avideo_admin_pass }}"
-          redirectUri: "{{ __avideo_url }}"
-        validate_certs: false
-      register: _login_avideo
-
-    - name: encoder configuration
-      ansible.builtin.uri:
-        url: "{{ __avideo_url }}/admin/save.json.php"
-        method: POST
-        body_format: form-urlencoded
-        headers:
-          Cookie: "{{ _login_avideo.cookies_string }}"
-        body:
-          pluginName: CustomizeAdvanced
-          pluginsList: encoderNetwork|useEncoderNetworkRecomendation|doNotShowUploadMP4Button|doNotShowImportMP4Button|doNotShowEncoderButton|doNotShowEmbedButton
-          encoderNetwork: "{{ __avideo_encoder_url_normalized }}"
-          doNotShowUploadMP4Button: 1
-          doNotShowImportMP4Button: 1
-        validate_certs: false
 
 - name: manage avideo plugins
   when: avideo_manage_plugin | bool
@@ -414,6 +373,57 @@
         _avideo_plugin_uuid: "{{ _avideo_to_change | selectattr('name', 'eq', item.name) }}"
         _enabled: "{{ _avideo_to_change | selectattr('name', 'eq', item.name) | map(attribute='enabled') }}"
       loop: "{{ avideo_plugin }}"
+
+- name: manage avideo plugin tables
+  when: avideo_manage_plugin | bool
+  tags:
+    - configure
+    - plugin_tables
+  block:
+
+    - name: manage plugin tables
+      ansible.builtin.command: "php -f ./installPluginsTables.php 1"
+      args:
+        chdir: "{{ avideo_main_path }}/install"
+
+- name: manage avideo plugin settings
+  when: avideo_manage_plugin | bool
+  tags:
+    - configure
+    - plugin_settings
+  block:
+
+    - name: login to avideo
+      ansible.builtin.uri:
+        url: "{{ __avideo_url }}/objects/login.json.php"
+        method: POST
+        body_format: form-urlencoded
+        body:
+          user: "{{ avideo_admin_user }}"
+          pass: "{{ avideo_admin_pass }}"
+          redirectUri: "{{ __avideo_url }}"
+        validate_certs: false
+      register: _login_avideo
+
+    - name: manage general setting configurations
+      ansible.builtin.uri:
+        url: "{{ __avideo_url }}/admin/save.json.php"
+        method: POST
+        body_format: form-urlencoded
+        headers:
+          Cookie: "{{ _login_avideo.cookies_string }}"
+        body:
+          "{{ _plugins }}"
+        validate_certs: false
+      vars:
+        _plugin: "{{ item.name }}"
+        _plugin_settings: "{{ item.plugin_settings }}"
+        _plugin_keys: "{{ _plugin_settings.keys() | join('|') }}"
+        _plugins: "{{ _plugin_settings | combine({'pluginName': _plugin, 'pluginsList': _plugin_keys}) }}"
+      loop: "{{ avideo_plugin_configurations }}"
+      loop_control:
+        label: "{{ _plugin }}"
+      no_log: "{{ not (avideo_debug | bool) }}"
 
 - name: manage backup and restore scripts
   when: avideo_backup_manage | bool
