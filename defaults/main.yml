@@ -38,13 +38,15 @@ avideo_plugin_tables: []
 avideo_plugin_store_user: avideo_user
 avideo_plugin_store_password: ChangeMe01.
 avideo_plugin_configurations:
+  - name: CustomizeUser
+    plugin_settings:
+      userMustBeLoggedIn: 1
+      disableNativeSignUp: 1
+      disablePersonalInfo: 1
   - name: CustomizeAdvanced
     plugin_settings:
       encoderNetwork: "{{ __avideo_encoder_url_normalized }}"
       doNotShowImportMP4Button: 1
-      userMustBeloggedIn: 1
-      disableNativeSignUp: 1
-      disablePersonalInfo: 1
 
 avideo_debug: false
 avideo_config_manage: true

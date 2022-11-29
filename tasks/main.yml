@@ -404,7 +404,7 @@
         validate_certs: false
       register: _login_avideo
 
-    - name: manage general setting configurations
+    - name: manage plugin parameters
       ansible.builtin.uri:
         url: "{{ __avideo_url }}/admin/save.json.php"
         method: POST
@@ -414,6 +414,7 @@
         body:
           "{{ _plugins }}"
         validate_certs: false
+        force: yes
       vars:
         _plugin: "{{ item.name }}"
         _plugin_settings: "{{ item.plugin_settings }}"
