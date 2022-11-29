@@ -271,6 +271,17 @@
           backrefs: true
       no_log: "{{ not (avideo_debug | bool) }}"
 
+- name: manage plugin tables
+  ansible.builtin.command: "php -f ./installPluginsTables.php 1"
+  args:
+    chdir: "{{ avideo_main_path }}/install"
+  failed_when: false
+  changed_when: false
+  when: avideo_manage_plugin | bool
+  tags:
+    - configure
+    - plugin_tables
+
 - name: manage avideo plugins
   when: avideo_manage_plugin | bool
   tags:
@@ -300,6 +311,9 @@
             headers:
               Cookie: "{{ _login_youphp_tube.set_cookie }}"
           loop: "{{ avideo_plugin }}"
+          loop_control:
+            label: "{{ item.name }}"
+          when: ((item.url is defined) and not (item.state is defined and item.state=='false'))
 
         - name: uncompress plugin archives
           ansible.builtin.unarchive:
@@ -307,6 +321,9 @@
             dest: "{{ __avideo_plugin_path }}"
             remote_src: yes
           loop: "{{ avideo_plugin }}"
+          loop_control:
+            label: "{{ item.name }}"
+          when: ((item.url is defined) and not (item.state is defined and item.state=='false'))
 
       always:
 
@@ -315,6 +332,9 @@
             dest: "{{ __avideo_plugin_path }}/{{ item.name }}.zip"
             state: absent
           loop: "{{ avideo_plugin }}"
+          loop_control:
+            label: "{{ item.name }}"
+          when: ((item.url is defined) and not (item.state is defined and item.state=='false'))
 
     - name: manage video folder
       ansible.builtin.file:
@@ -324,6 +344,9 @@
         owner: "{{ avideo_group }}"
         mode: 0755
       loop: "{{ avideo_plugin }}"
+      loop_control:
+        label: "{{ item.name }}"
+      when: ((item.url is defined) and not (item.state is defined and item.state=='false'))
 
     - name: login to avideo
       ansible.builtin.uri:
@@ -347,14 +370,22 @@
         validate_certs: false
       register: _avideo_plugin_available
 
+    - name: create default settings for plugins to change
+      ansible.builtin.set_fact:
+        _avideo_to_change: []
+
     - name: extract data plugin
       ansible.builtin.set_fact:
-        _avideo_to_change: "{{ _avideo_to_change | default([]) + [item] }}"
+        _avideo_to_change: "{{ _avideo_to_change + [item] }}"
       vars:
-        _avideo_list_plugin: "{{ avideo_plugin | map(attribute='name') | list }}"
+        _plugin: "{{ item.name }}"
+        _avideo_plugins: "{{ avideo_plugin }}"
+        _avideo_list_plugin: "{{ _avideo_plugins | map(attribute='name') | list }}"
       loop: "{{ _avideo_plugin_available.json.rows }}"
-      when: item.name in _avideo_list_plugin
-      no_log: true
+      loop_control:
+        label: "{{ _plugin }}"
+      when: _plugin in _avideo_list_plugin
+      no_log: "{{ not (avideo_debug | bool) }}"
 
     - name: enable/disable plugins
       ansible.builtin.uri:
@@ -371,38 +402,9 @@
         validate_certs: false
       vars:
         _avideo_plugin_uuid: "{{ _avideo_to_change | selectattr('name', 'eq', item.name) }}"
-        _enabled: "{{ _avideo_to_change | selectattr('name', 'eq', item.name) | map(attribute='enabled') }}"
       loop: "{{ avideo_plugin }}"
-
-- name: manage plugin tables
-  ansible.builtin.command: "php -f ./installPluginsTables.php 1"
-  args:
-    chdir: "{{ avideo_main_path }}/install"
-  failed_when: false
-  changed_when: false
-  when: avideo_manage_plugin | bool
-  tags:
-    - configure
-    - plugin_tables
-
-- name: manage avideo plugin settings
-  when: avideo_manage_plugin | bool
-  tags:
-    - configure
-    - plugin_settings
-  block:
-
-    - name: login to avideo
-      ansible.builtin.uri:
-        url: "{{ __avideo_url }}/objects/login.json.php"
-        method: POST
-        body_format: form-urlencoded
-        body:
-          user: "{{ avideo_admin_user }}"
-          pass: "{{ avideo_admin_pass }}"
-          redirectUri: "{{ __avideo_url }}"
-        validate_certs: false
-      register: _login_avideo
+      loop_control:
+        label: "{{ item.name }}"
 
     - name: manage plugin parameters
       ansible.builtin.uri:
@@ -420,10 +422,13 @@
         _plugin_settings: "{{ item.plugin_settings }}"
         _plugin_keys: "{{ _plugin_settings.keys() | join('|') }}"
         _plugins: "{{ _plugin_settings | combine({'pluginName': _plugin, 'pluginsList': _plugin_keys}) }}"
-      loop: "{{ avideo_plugin_configurations }}"
+      loop: "{{ avideo_plugin }}"
       loop_control:
         label: "{{ _plugin }}"
       no_log: "{{ not (avideo_debug | bool) }}"
+      when:
+        - item.plugin_settings is defined
+        - not (item.state is defined and item.state == 'false')
 
 - name: manage backup and restore scripts
   when: avideo_backup_manage | bool
