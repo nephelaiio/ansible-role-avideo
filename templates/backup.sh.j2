@@ -14,12 +14,12 @@ TMPFILE=$(mktemp "{{ backup_path }}/mysqldump.XXXXXX")
 --databases {{ backup_db_name }} \
 --single-transaction > "$TMPFILE"
 
-_backup_source="$_backup_source $TMPFILE --exclude='.git' --exclude='node_modules'"
+_tar="{{ backup_path }}/$(date +%Y%m%d-%H%M%S).{{ backup_identifier }}.tgz"
 
 {% endif %}
 
 # create backup archive
-/bin/tar cvzf "{{ backup_path }}/$(date +%Y%m%d-%H%M%S).{{ backup_identifier }}.tgz" $_backup_source
+/bin/tar --exclude='.git' --exclude='node_modules' -cvzf $_tar $_backup_source $TMPFILE
 
 # clean up temporary directory
 if [ -f "$TMPFILE" ]; then
