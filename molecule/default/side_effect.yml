@@ -17,9 +17,6 @@
         state: directory
         path: /backup
 
-    - name: Test File touch
-      command: 
-
     - name: take backup
       command: "/usr/local/bin/avideo-backup"
       register: backup_cmd
