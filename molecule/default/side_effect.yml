@@ -17,9 +17,27 @@
         state: directory
         path: /backup
 
+    - name: Test File touch
+      command: 
+
     - name: take backup
       command: "/usr/local/bin/avideo-backup"
       register: backup_cmd
+
+    - name: Check backup mode
+      command: "ls -l {{ backup_cmd.stdout }} | awk '{print $1}'"
+      register: backup_mode
+      changed_when: false
+
+    - name: Check if backup is read-only
+      fail:
+        msg: "Backup is in read-only mode"
+      when: backup_mode.stdout[0] == '-r--r--r--'
+
+    - name: Check if backup is read-write
+      debug:
+        msg: "Backup is in read-write mode"
+      when: backup_mode.stdout[0] == '-rw-rw-rw-'
 
     - name: remove avideo folder
       file:
