@@ -5,7 +5,7 @@ on:
   push:
   pull_request:
   schedule:
-    - cron: "* * * * *"
+    - cron: "0 * * * *"
 
 defaults:
   run:
