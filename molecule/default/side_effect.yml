@@ -15,14 +15,14 @@
     - name: create backup dir
       file:
         state: directory
-        path: /backup    
+        path: /backup
 
     - block:
 
         - name: take backup
           command: "/usr/local/bin/avideo-backup"
           register: backup_cmd
-          
+
       rescue:
 
         - name: Check backup mode
