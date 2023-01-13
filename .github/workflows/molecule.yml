@@ -2,8 +2,9 @@
 name: molecule
 
 on:
-  push:
   pull_request:
+  schedule:
+    - cron: "* * * * *"
 
 defaults:
   run:
