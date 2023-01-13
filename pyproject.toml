@@ -10,7 +10,7 @@ ansible = "^6.6.0"
 ansible-lint = "^6.8.6"
 MarkupSafe = "2.0.1"
 netaddr = "^0.8.0"
-molecule = {extras = ["molecule-podman", "podman"], version = "^4.0.3"}
+molecule = {extras = ["molecule-podman", "podman"], version = "^2.1.0"}
 
 [build-system]
 requires = ["poetry-core"]

@@ -11,3 +11,8 @@
       containers.podman.podman_container:
         name: "{{ inventory_hostname }}"
         state: absent
+
+    - name: remove docker container
+      containers.docker.docker_container:
+      name: "{{ inventory_hostname }}"
+      state: absent
