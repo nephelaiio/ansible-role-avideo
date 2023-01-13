@@ -68,10 +68,10 @@ jobs:
       - name: install pips
         run: poetry install
 
-      - name: install podman
-        run: sudo apt-get install -y podman
+      - name: install docker
+        run: sudo apt-get install -y docker
 
-      - name: configure podman registry
+      - name: configure docker registry
         run: poetry run ansible -b -m lineinfile localhost -a "path=/etc/containers/registries.conf line='unqualified-search-registries = [\"docker.io\"]'"
 
       - name: run molecule tests
