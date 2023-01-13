@@ -7,7 +7,7 @@
 
   tasks:
 
-    - name: remove podman container
-      containers.podman.podman_container:
+    - name: remove docker container
+      containers.docker.docker_container:
         name: "{{ inventory_hostname }}"
         state: absent

@@ -7,4 +7,4 @@ roles:
   - nephelaiio.git
   - nephelaiio.pip
 collections:
-  - containers.podman
+  - containers.docker
