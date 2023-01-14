@@ -8,6 +8,6 @@
   tasks:
 
     - name: remove docker container
-      containers.docker.docker_container:
+      geerlingguy.docker.docker_container:
         name: "{{ inventory_hostname }}"
         state: absent
