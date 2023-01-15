@@ -6,5 +6,5 @@ roles:
   - nephelaiio.plugins
   - nephelaiio.git
   - nephelaiio.pip
-collections:
+  - geerlingguy.pip
   - geerlingguy.docker
