@@ -3,6 +3,8 @@
 
   hosts: localhost
 
+  connection: local
+
   gather_facts: false
 
   tasks:
@@ -11,3 +13,4 @@
       community.docker.docker_container:
         name: "{{ inventory_hostname }}"
         state: absent
+        force_kill: "{{ force_kill | default(True) }}"
