@@ -45,9 +45,11 @@ jobs:
         scenario:
           - default
           - users
-        distro:
-          - ubuntu2004
-          - ubuntu2204
+        image:
+          - name: ubuntu2204
+            command: /lib/systemd/systemd
+          - name: ubuntu2004
+            command: /lib/systemd/systemd
 
     steps:
 
@@ -67,16 +69,10 @@ jobs:
       - name: install pips
         run: poetry install
 
-      - name: install podman
-        run: sudo apt-get install -y podman
-
-      - name: configure podman registry
-        run: poetry run ansible -b -m lineinfile localhost -a "path=/etc/containers/registries.conf line='unqualified-search-registries = [\"docker.io\"]'"
-
       - name: run molecule tests
         run: poetry run molecule test -s ${{ matrix.scenario }}
         env:
           PY_COLORS: '1'
           ANSIBLE_FORCE_COLOR: '1'
-          MOLECULE_DISTRO: ${{ matrix.distro }}
-          MOLECULE_IMAGE_COMMAND: /lib/systemd/systemd
+          MOLECULE_IMAGE: ${{ matrix.image.name }}
+          MOLECULE_COMMAND: ${{ matrix.image.command }}
