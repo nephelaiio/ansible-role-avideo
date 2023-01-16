@@ -3,9 +3,6 @@ name: molecule
 
 on:
   push:
-  pull_request:
-  schedule:
-    - cron: "0 * * * *"
 
 defaults:
   run:
@@ -49,6 +46,11 @@ jobs:
         distro:
           - ubuntu2004
           - ubuntu2204
+        image:
+          - name: ubuntu2204
+            command: /lib/systemd/systemd
+          - name: ubuntu2004
+            command: /lib/systemd/systemd
 
     steps:
 
@@ -73,5 +75,5 @@ jobs:
         env:
           PY_COLORS: '1'
           ANSIBLE_FORCE_COLOR: '1'
-          MOLECULE_DOCKER_DISTRO: ${{ matrix.distro }}
-          MOLECULE_IMAGE_COMMAND: /lib/systemd/systemd
+          MOLECULE_IMAGE: ${{ matrix.image.name }}
+          MOLECULE_COMMAND: ${{ matrix.image.command }}
