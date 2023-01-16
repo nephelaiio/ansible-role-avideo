@@ -5,10 +5,10 @@ driver:
   name: docker
 platforms:
   - name: instance
-    image: geerlingguy/docker-${MOLECULE_DISTRO:-ubuntu2004}-ansible
+    image: geerlingguy/docker-${MOLECULE__DOCKER_DISTRO:-ubuntu2004}-ansible
     volumes:
       - /sys/fs/cgroup:/sys/fs/cgroup:ro
-    command: ${MOLECULE_DOCKER_COMMAND:-""}
+    command: ${MOLECULE_IMAGE_COMMAND:-"/lib/systemd/systemd"}
     pre_build_image: true
     privileged: true
 scenario:
