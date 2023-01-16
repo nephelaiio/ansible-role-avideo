@@ -1,5 +1,5 @@
 ---
-- name: verify
+- name: destroy
 
   hosts: localhost
 
