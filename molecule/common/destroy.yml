@@ -10,4 +10,5 @@
     - name: remove docker container
       community.docker.docker_container:
         name: "{{ inventory_hostname }}"
+        
         state: absent
