@@ -43,9 +43,6 @@ jobs:
         scenario:
           - default
           - users
-        distro:
-          - ubuntu2004
-          - ubuntu2204
         image:
           - name: ubuntu2204
             command: /lib/systemd/systemd
