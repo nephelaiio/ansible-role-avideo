@@ -5,7 +5,7 @@ driver:
   name: docker
 platforms:
   - name: instance
-    image: geerlingguy/docker-${MOLECULE_DOCKER_IMAGE:-ubuntu2004}-ansible
+    image: geerlingguy/docker-${MOLECULE_DISTRO:-ubuntu2004}-ansible
     volumes:
       - /sys/fs/cgroup:/sys/fs/cgroup:ro
     command: ${MOLECULE_DOCKER_COMMAND:-""}
@@ -28,6 +28,7 @@ scenario:
     - destroy
 provisioner:
   name: ansible
+  log: true
   playbooks:
     converge: ../common/converge.yml
     verify: ../common/verify.yml
