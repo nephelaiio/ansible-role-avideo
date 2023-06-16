@@ -478,7 +478,7 @@
         content: |
           #!/usr/bin/env bash
           echo
-          echo run {{ avideo_backup_bin | basename }} to manually force snipeit backup creation
-          echo run {{ avideo_restore_bin | basename }} to manually restore latest snipeit backup
+          echo run sudo {{ avideo_backup_bin | basename }} to manually force avideo backup creation
+          echo run sudo {{ avideo_restore_bin | basename }} to manually restore avideo snipeit backup
           echo
         mode: 0755
