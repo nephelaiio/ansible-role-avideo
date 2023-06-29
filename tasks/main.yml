@@ -84,7 +84,7 @@
 
     - name: initialize streamer configuration
       ansible.builtin.uri:
-        url: "{{ __avideo_url }}/install/checkConfiguration.php"
+        url: "{{ __avideo_url_local }}/install/checkConfiguration.php"
         method: POST
         body_format: form-urlencoded
         body:
@@ -198,7 +198,7 @@
 
         - name: initialize encoder configuration
           ansible.builtin.uri:
-            url: "{{ __avideo_url }}/upload/install/checkConfiguration.php"
+            url: "{{ __avideo_url_local }}/upload/install/checkConfiguration.php"
             method: POST
             body_format: form-urlencoded
             body:
@@ -350,7 +350,7 @@
 
     - name: login to avideo
       ansible.builtin.uri:
-        url: "{{ __avideo_url }}/objects/login.json.php"
+        url: "{{ __avideo_url_local }}/objects/login.json.php"
         method: POST
         body_format: form-urlencoded
         body:
@@ -362,7 +362,7 @@
 
     - name: query all plugins available
       ansible.builtin.uri:
-        url: "{{ __avideo_url }}/objects/pluginsAvailable.json.php"
+        url: "{{ __avideo_url_local }}/objects/pluginsAvailable.json.php"
         method: POST
         body_format: json
         headers:
@@ -389,7 +389,7 @@
 
     - name: enable/disable plugins
       ansible.builtin.uri:
-        url: "{{ __avideo_url }}/objects/pluginSwitch.json.php"
+        url: "{{ __avideo_url_local }}/objects/pluginSwitch.json.php"
         method: POST
         body_format: form-urlencoded
         headers:
@@ -408,7 +408,7 @@
 
     - name: manage plugin parameters
       ansible.builtin.uri:
-        url: "{{ __avideo_url }}/admin/save.json.php"
+        url: "{{ __avideo_url_local }}/admin/save.json.php"
         method: POST
         body_format: form-urlencoded
         headers:
@@ -479,6 +479,6 @@
           #!/usr/bin/env bash
           echo
           echo run sudo {{ avideo_backup_bin | basename }} to manually force avideo backup creation
-          echo run sudo {{ avideo_restore_bin | basename }} to manually restore avideo snipeit backup
+          echo run sudo {{ avideo_restore_bin | basename }} to manually restore avideo backup
           echo
         mode: 0755
