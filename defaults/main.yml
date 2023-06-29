@@ -91,7 +91,8 @@ avideo_backup_identifier: "{{ inventory_hostname }}-avideo"
 avideo_backup_cronjob_state: present
 avideo_backup_cronjob_schedule: daily
 
-__avideo_url: "https://localhost"
+__avideo_url: "https://{{ avideo_servername }}"
+__avideo_url_local: "https://localhost"
 __avideo_enconder_url: "{{ __avideo_url }}/upload"
 __avideo_streamer_url_normalized: "{{ __avideo_url | regex_replace('/$', '') }}/"
 __avideo_streamer_url_path_normalized: "{{ __avideo_streamer_url_normalized | urlsplit('path') }}"
